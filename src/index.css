@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&family=Noto+Sans+SC:wght@100..900&family=Noto+Sans+JP:wght@100..900&family=Noto+Sans+Hebrew:wght@100..900&family=Noto+Sans+Greek:wght@100..900&display=swap');
 
 :root {
   --theme-primary: #d946ef;
@@ -7,7 +8,8 @@
 }
 
 @theme {
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-sans: "Noto Sans", "Noto Sans SC", "Noto Sans JP", "Noto Sans Hebrew", "Noto Sans Greek", "Unifont", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Noto Sans", "Unifont", ui-monospace, SFMono-Regular, monospace;
   --color-neon-pink: var(--theme-primary);
   --color-neon-green: var(--theme-secondary);
   --color-void: var(--theme-bg);

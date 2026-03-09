@@ -64,6 +64,9 @@ export default function Admin() {
       setValueSettings('footerText', config.footerText);
       setValueSettings('heroTitle', config.heroTitle);
       setValueSettings('heroDescription', config.heroDescription);
+      setValueSettings('bannerMessage', config.bannerMessage);
+      setValueSettings('bannerStart', config.bannerStart);
+      setValueSettings('bannerEnd', config.bannerEnd);
     }
   }, [config, contentType, setValueSettings]);
 
@@ -423,6 +426,22 @@ export default function Admin() {
                   <label className="text-sm font-bold text-neon-pink">Hero Description</label>
                   <textarea {...registerSettings('heroDescription')} className="neobrutal-input w-full h-24" />
                   <p className="text-xs text-white/50">Subtitle text on the homepage.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-neon-pink">Banner Message</label>
+                  <input {...registerSettings('bannerMessage')} className="neobrutal-input w-full" placeholder="e.g. Sale ends soon!" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-neon-pink">Banner Start</label>
+                    <input type="datetime-local" {...registerSettings('bannerStart')} className="neobrutal-input w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-neon-pink">Banner End</label>
+                    <input type="datetime-local" {...registerSettings('bannerEnd')} className="neobrutal-input w-full" />
+                  </div>
                 </div>
              </div>
           </form>

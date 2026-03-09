@@ -5,6 +5,7 @@ import { useTheme, themes } from '@/context/ThemeContext';
 import { logger } from '@/lib/logger';
 import DraggableCard from './DraggableCard';
 import SnakeGame from './SnakeGame';
+import { GoogleGenAI } from "@google/genai";
 
 interface TerminalProps {
   onOpenCalculator?: () => void;
@@ -29,13 +30,20 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
   const [input, setInput] = useState("");
   const [posts, setPosts] = useState<any[]>([]);
   const [tags, setTags] = useState<string[]>([]);
-  const [activeApp, setActiveApp] = useState<'snake' | 'win96' | 'win98' | 'doom' | 'emshell' | null>(null);
+  const [activeApp, setActiveApp] = useState<'snake' | 'win96' | 'win98' | 'win93' | 'emshell' | 'doom' | 'linux' | 'linux-gui' | null>(null);
   
   // Refs for accessing latest state in closures (event handlers/timeouts)
   const postsRef = useRef<any[]>([]);
   const tagsRef = useRef<string[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
   const doomRef = useRef<HTMLIFrameElement>(null);
+  const linuxRef = useRef<HTMLIFrameElement>(null);
+  
+  useEffect(() => {
+    if (activeApp === 'linux' && linuxRef.current) {
+      linuxRef.current.focus();
+    }
+  }, [activeApp]);
   
   const navigate = useNavigate();
   const { cycleTheme, setTheme, theme } = useTheme();
@@ -54,7 +62,7 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
    * 
    * @param cmdLine - The full command string entered by the user.
    */
-  const processCommand = (cmdLine: string) => {
+  const processCommand = async (cmdLine: string) => {
     const parts = cmdLine.split(' ');
     const cmd = parts[0].toLowerCase();
     const args = parts.slice(1);
@@ -80,10 +88,14 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
           "    [name]    - Set specific theme",
           "  windows96   - Windows 96",
           "  windows98   - Windows 98",
-          "  emshell     - BusyBox Shell",
+          "  windows93   - Windows 93",
+          "  emshell     - Emscripten Shell",
+          "  linux       - Linux Shell (WebVM)",
+          "  linux-gui   - Linux GUI (Alpine)",
           "  doom        - Play DOOM",
           "  snake       - Play Snake",
           "  calc        - Open Calculator",
+          "  ai          - Ask AI assistant",
           "  unicorn     - ???",
           "  date        - Show system time",
           "  whoami      - Identity check"
@@ -200,15 +212,30 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
         newLines.push("TIME TRAVELING TO 1998...");
         break;
 
+      case 'windows93':
+      case 'win93':
+        setActiveApp('win93');
+        newLines.push("LOADING WINDOWS 93...");
+        break;
+
+      case 'emshell':
+        setActiveApp('emshell');
+        newLines.push("LOADING EMSHELL...");
+        break;
+
       case 'doom':
         setActiveApp('doom');
         newLines.push("INITIALIZING UAC TELEPORTER...");
         break;
 
-      case 'emshell':
-      case 'busybox':
-        setActiveApp('emshell');
-        newLines.push("BOOTING BUSYBOX KERNEL...");
+      case 'linux':
+        setActiveApp('linux');
+        newLines.push("BOOTING LINUX (WEBVM)...");
+        break;
+
+      case 'linux-gui':
+        setActiveApp('linux-gui');
+        newLines.push("BOOTING LINUX GUI (ALPINE)...");
         break;
 
       case 'snake':
@@ -223,6 +250,27 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
           newLines.push("LAUNCHING CALC.EXE...");
         } else {
           newLines.push("ERROR: CALCULATOR MODULE NOT FOUND.");
+        }
+        break;
+
+      case 'ai':
+        if (!argStr) {
+          newLines.push("Usage: ai [prompt]");
+        } else {
+          newLines.push("THINKING...");
+          setLines(prev => [...prev, ...newLines]);
+          
+          try {
+            const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+            const response = await ai.models.generateContent({
+              model: "gemini-3-flash-preview",
+              contents: argStr,
+            });
+            setLines(prev => [...prev.slice(0, -1), response.text || "No response."]);
+          } catch (e) {
+            setLines(prev => [...prev.slice(0, -1), "ERROR: AI FAILED."]);
+          }
+          return;
         }
         break;
 
@@ -303,22 +351,22 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
    * Handles clicking on a tag button.
    * Simulates typing 'tag [name]' into the terminal.
    */
-  const handleTagClick = (tag: string) => {
+  const handleTagClick = async (tag: string) => {
     const cmd = `tag ${tag}`;
     setLines(prev => [...prev, `> ${cmd}`]);
-    processCommand(cmd);
+    await processCommand(cmd);
   };
 
   /**
    * Handles the form submission (pressing Enter).
    */
-  const handleCommand = (e: React.FormEvent) => {
+  const handleCommand = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
     const cmdLine = input.trim();
     setLines(prev => [...prev, `> ${cmdLine}`]);
-    processCommand(cmdLine);
+    await processCommand(cmdLine);
     setInput("");
   };
 
@@ -478,7 +526,7 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
         );
 
         setLines([
-          "ACCESS GRANTED.",
+          "NEW: Type 'ai [prompt]' to chat with the AI assistant!",
           cowsayBlock,
           "",
           "Type 'help' for commands."
@@ -500,7 +548,8 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
           {activeApp === 'snake' ? 'SNAKE // PYTHON' :
            activeApp === 'win96' ? 'WINDOWS 96 // MIKESOFT' :
            activeApp === 'win98' ? 'WINDOWS 98 // REDMOND' :
-           activeApp === 'emshell' ? 'EM-SHELL // BUSYBOX' :
+           activeApp === 'linux' ? 'LINUX // WEBVM' :
+           activeApp === 'linux-gui' ? 'LINUX // GUI' :
            activeApp === 'doom' ? 'DOOM // ID SOFTWARE' :
            `TERMINAL_V1.1 // ${theme.toUpperCase()}`}
         </span>
@@ -552,12 +601,34 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
               title="Windows 98"
               allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media"
             />
+          ) : activeApp === 'win93' ? (
+            <iframe 
+              src="https://www.windows93.net/"
+              className="w-full h-full border-none" 
+              title="Windows 93"
+              allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media"
+            />
           ) : activeApp === 'emshell' ? (
             <iframe 
-              src="https://ustymukhman.github.io/em-shell/"
+              src="https://tbfleming.github.io/em-shell/"
               className="w-full h-full border-none" 
-              title="em-shell"
+              title="Emscripten Shell"
               allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media"
+            />
+          ) : activeApp === 'linux' ? (
+            <iframe 
+              src="https://webvm.io/"
+              className="w-full h-full border-none" 
+              title="linux"
+              allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media"
+            />
+          ) : activeApp === 'linux-gui' ? (
+            <iframe 
+              ref={linuxRef}
+              src="https://webvm.io/alpine.html"
+              className="w-full h-full border-none" 
+              title="linux-gui"
+              allow="cross-origin-isolated autoplay fullscreen microphone camera midi encrypted-media"
             />
           ) : activeApp === 'doom' ? (
             <iframe 

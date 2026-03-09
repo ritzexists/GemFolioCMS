@@ -8,6 +8,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { config } = useSiteConfig();
 
+  const now = new Date("2026-03-09T15:48:34-07:00");
+  const showBanner = config.bannerMessage && 
+                     (!config.bannerStart || now >= new Date(config.bannerStart)) &&
+                     (!config.bannerEnd || now <= new Date(config.bannerEnd));
+
   const WorksIcon = ({ size, ...props }: any) => (
     <div className="flex items-center gap-0.5" {...props}>
       <Wrench size={size} />
@@ -34,6 +39,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b-4 border-neon-pink bg-void sticky top-0 z-50">
+        {showBanner && (
+          <div className="bg-neon-pink text-void text-center py-2 font-bold uppercase text-sm">
+            {config.bannerMessage}
+          </div>
+        )}
         <div className="flex justify-between items-stretch">
           <div className="flex items-center px-6 py-4 border-r-4 border-neon-pink bg-neon-green text-void">
             <Terminal size={24} className="mr-2" />
