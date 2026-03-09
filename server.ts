@@ -2,14 +2,9 @@ import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
 import matter from 'gray-matter';
 import TurndownService from 'turndown';
 import * as cheerio from 'cheerio';
-
-const require = createRequire(import.meta.url);
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 const PORT = 3000;
@@ -72,8 +67,7 @@ app.get('/api/config', (req, res) => {
 // Update Site Config
 app.post('/api/config', (req, res) => {
   if (process.env.DISABLE_ADMIN === 'true') {
-    return res.status(403).json({ error: 'Admin dashboard is disabled' });
-  }
+    return res.status(403).json({ error: 'Admin dashboard is disabled' });\n  }
 
   try {
     const newConfig = req.body;
@@ -93,8 +87,7 @@ app.get('/api/posts', (req, res) => {
     posts.sort((a, b) => {
       const dateA = new Date(a.frontmatter.date || 0).getTime();
       const dateB = new Date(b.frontmatter.date || 0).getTime();
-      return dateB - dateA;
-    });
+      return dateB - dateA;\n    });
     res.json(posts);
   } catch (error) {
     console.error(error);
@@ -154,7 +147,6 @@ app.post('/api/content', (req, res) => {
   try {
     const { type, slug, frontmatter, content, originalSlug } = req.body;
     const dir = type === 'page' ? PAGES_DIR : POSTS_DIR;
-    
     // If slug changed, delete old file
     if (originalSlug && originalSlug !== slug) {
       const oldPath = path.join(dir, `${originalSlug}.md`);
@@ -165,7 +157,7 @@ app.post('/api/content', (req, res) => {
 
     const filePath = path.join(dir, `${slug}.md`);
     const fileContent = matter.stringify(content, frontmatter);
-    
+
     fs.writeFileSync(filePath, fileContent);
     res.json({ success: true, slug });
   } catch (error) {
@@ -183,7 +175,7 @@ app.delete('/api/content/:type/:slug', async (req, res) => {
   try {
     const { type, slug } = req.params;
     console.log(`[DELETE] Request received for type: ${type}, slug: ${slug}`);
-    
+
     const dir = type === 'page' ? PAGES_DIR : POSTS_DIR;
     const filePath = path.join(dir, `${slug}.md`);
     console.log(`[DELETE] Attempting to delete file: ${filePath}`);
@@ -193,16 +185,14 @@ app.delete('/api/content/:type/:slug', async (req, res) => {
       await fs.promises.unlink(filePath);
       console.log(`[DELETE] Successfully deleted: ${filePath}`);
       res.json({ success: true });
-    } catch (err: any) {
-      console.error(`[DELETE] Error deleting file: ${err.message}`);
+    } catch (err: any) {\n      console.error(`[DELETE] Error deleting file: ${err.message}`);
       if (err.code === 'ENOENT') {
         res.status(404).json({ error: 'File not found' });
       } else {
         throw err;
       }
     }
-  } catch (error) {
-    console.error('Delete error:', error);
+  } catch (error) {\n    console.error('Delete error:', error);
     res.status(500).json({ error: 'Failed to delete content' });
   }
 });
@@ -217,22 +207,22 @@ app.post('/api/import', async (req, res) => {
     const { url } = req.body;
     const response = await fetch(url);
     const html = await response.text();
-    
+
     const $ = cheerio.load(html);
-    
+
     // Extract Metadata
     const title = $('title').text() || $('meta[property="og:title"]').attr('content') || 'Imported Article';
-    
+
     const description = $('meta[name="description"]').attr('content') || 
                         $('meta[property="og:description"]').attr('content') || '';
-                        
+
     // Extract Tags
     let tags: string[] = [];
     const keywords = $('meta[name="keywords"]').attr('content');
     if (keywords) {
       tags = keywords.split(',').map(t => t.trim());
     }
-    
+
     // Also check article:tag
     $('meta[property="article:tag"]').each((i, el) => {
       const tag = $(el).attr('content');
@@ -248,7 +238,7 @@ app.post('/api/import', async (req, res) => {
         } catch (e) {}
       }
     });
-    
+
     $('[href]').each((i, el) => {
       const href = $(el).attr('href');
       if (href) {
@@ -257,7 +247,7 @@ app.post('/api/import', async (req, res) => {
         } catch (e) {}
       }
     });
-    
+
     // Remove scripts, styles, etc.
     $('script').remove();
     $('style').remove();
@@ -266,7 +256,7 @@ app.post('/api/import', async (req, res) => {
     $('header').remove();
     $('iframe').remove();
     $('noscript').remove();
-    
+
     // Try to find main content
     // Prioritize semantic tags, then common class names
     let contentHtml = '';
@@ -280,20 +270,20 @@ app.post('/api/import', async (req, res) => {
       '#content',
       'body'
     ];
-    
+
     for (const selector of selectors) {
       if ($(selector).length > 0) {
         contentHtml = $(selector).html() || '';
         break;
       }
     }
-    
+
     const turndownService = new TurndownService({
       headingStyle: 'atx',
       codeBlockStyle: 'fenced',
       emDelimiter: '*'
     });
-    
+
     // Add rule to keep images
     turndownService.addRule('images', {
       filter: 'img',
@@ -308,24 +298,23 @@ app.post('/api/import', async (req, res) => {
     // Add rule for code blocks to ensure language detection if possible
     turndownService.addRule('codeBlocks', {
       filter: ['pre'],
-      replacement: function (content, node) {
-        const codeElement = (node as HTMLElement).querySelector('code');
+      replacement: function (content, node) {\n        const codeElement = (node as HTMLElement).querySelector('code');
         let language = '';
-        
+
         if (codeElement) {
           const className = codeElement.getAttribute('class') || '';
-          const match = className.match(/language-(\w+)/);
+          const match = className.match(/language-(\\w+)/);
           if (match) {
             language = match[1];
           }
         }
-        
-        return '\n\n```' + language + '\n' + (codeElement ? codeElement.textContent : node.textContent) + '\n```\n\n';
+
+        return '\\n\\n```' + language + '\\n' + (codeElement ? codeElement.textContent : node.textContent) + '\\n```\\n\\n';
       }
     });
 
     const markdown = turndownService.turndown(contentHtml);
-    
+
     res.json({ 
       title,
       description,

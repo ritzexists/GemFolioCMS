@@ -35,6 +35,7 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
   const postsRef = useRef<any[]>([]);
   const tagsRef = useRef<string[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const doomRef = useRef<HTMLIFrameElement>(null);
   
   const navigate = useNavigate();
   const { cycleTheme, setTheme, theme } = useTheme();
@@ -79,8 +80,8 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
           "    [name]    - Set specific theme",
           "  windows96   - Windows 96",
           "  windows98   - Windows 98",
+          "  emshell     - BusyBox Shell",
           "  doom        - Play DOOM",
-          "  emshell     - BusyBox in browser",
           "  snake       - Play Snake",
           "  calc        - Open Calculator",
           "  unicorn     - ???",
@@ -475,8 +476,8 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
           {activeApp === 'snake' ? 'SNAKE // PYTHON' :
            activeApp === 'win96' ? 'WINDOWS 96 // MIKESOFT' :
            activeApp === 'win98' ? 'WINDOWS 98 // REDMOND' :
+           activeApp === 'emshell' ? 'EM-SHELL // BUSYBOX' :
            activeApp === 'doom' ? 'DOOM // ID SOFTWARE' :
-           activeApp === 'emshell' ? 'BUSYBOX // EM-SHELL' :
            `TERMINAL_V1.1 // ${theme.toUpperCase()}`}
         </span>
         <div className="flex gap-1 items-center">
@@ -502,7 +503,15 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
       </div>
       
       {activeApp ? (
-        <div className={`mt-6 w-full h-full flex-1 overflow-hidden relative ${activeApp !== 'snake' ? 'bg-black' : ''}`} onPointerDown={(e) => e.stopPropagation()}>
+        <div 
+          className={`mt-6 w-full h-full flex-1 overflow-hidden relative ${activeApp !== 'snake' ? 'bg-black' : ''}`} 
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            if (activeApp === 'doom' && doomRef.current) {
+              doomRef.current.requestPointerLock();
+            }
+          }}
+        >
           {activeApp === 'snake' ? (
             <SnakeGame onExit={() => setActiveApp(null)} />
           ) : activeApp === 'win96' ? (
@@ -519,23 +528,22 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
               title="Windows 98"
               allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media"
             />
-          ) : activeApp === 'doom' ? (
-            <iframe 
-              src="https://ustymukhman.github.io/webDOOM/public/"
-              className="w-full h-full border-none" 
-              title="DOOM"
-              allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media; pointer-lock"
-            />
           ) : activeApp === 'emshell' ? (
             <iframe 
               src="https://ustymukhman.github.io/em-shell/"
               className="w-full h-full border-none" 
-              title="BusyBox"
+              title="em-shell"
+              allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media"
+            />
+          ) : activeApp === 'doom' ? (
+            <iframe 
+              ref={doomRef}
+              src="https://ustymukhman.github.io/webDOOM/public/"
+              className="w-full h-full border-none" 
+              title="DOOM"
               allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media"
             />
           ) : null}
-          
-          {/* Native apps handle their own exit, we use the header exit button */}
         </div>
       ) : (
         <>
