@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Terminal, BookOpen, User, Settings, Home, Star, RectangleGoggles, HardHat, Wrench } from 'lucide-react';
+import { Terminal, BookOpen, User, Settings, Home, Star, RectangleGoggles, HardHat, Wrench, Mic } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSiteConfig } from '@/context/SiteConfigContext';
 
@@ -54,6 +54,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <NavItem to="/" icon={Home} label="Home" />
             <NavItem to="/blog" icon={BookOpen} label="Blog" />
             <NavItem to="/p/recs" icon={Star} label="Recs" />
+            <NavItem to="/p/presentations" icon={Mic} label="Talks" />
             <NavItem to="/p/portfolio" icon={WorksIcon} label="Works" />
             <NavItem to="/p/hubs" icon={RectangleGoggles} label="Hubs" />
             <NavItem to="/profile" icon={User} label="Profile" />

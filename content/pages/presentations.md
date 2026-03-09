@@ -1,0 +1,21 @@
+---
+title: "Presentations"
+layout: "recs"
+items:
+  - title: "Building Neobrutalist UIs"
+    image: "https://picsum.photos/seed/neobrutalist/600/400"
+    link: "#"
+    description: "Presented at WebConf 2025. A deep dive into the philosophy and implementation of neobrutalist design patterns."
+  - title: "The Future of AI in Web Development"
+    image: "https://picsum.photos/seed/ai/600/400"
+    link: "#"
+    description: "Keynote at DevSummit 2024. Exploring how AI agents are transforming the way we build and deploy web applications."
+  - title: "Mastering TypeScript"
+    image: "https://picsum.photos/seed/typescript/600/400"
+    link: "#"
+    description: "Workshop at JSConf 2023. Practical tips and tricks for writing type-safe, maintainable code."
+---
+
+# Conference Talks
+
+A collection of presentations I've given at various conferences and meetups.
