@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import ReactMarkdown from 'react-markdown';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import 'katex/dist/katex.min.css';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { motion } from 'motion/react';
 import { ExternalLink } from 'lucide-react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import DraggableCard from '@/components/DraggableCard';
 
 interface PageData {
@@ -125,72 +120,7 @@ export default function Page() {
         </h1>
         
         <div className="markdown-body prose prose-invert prose-headings:font-black prose-headings:uppercase prose-headings:text-neon-green prose-p:text-white/90 prose-p:leading-relaxed prose-strong:text-neon-pink prose-strong:font-black max-w-none">
-          <ReactMarkdown
-            remarkPlugins={[remarkMath]}
-            rehypePlugins={[rehypeKatex]}
-            components={{
-              h1: ({node, ...props}) => <h1 className="text-4xl md:text-5xl font-black text-neon-green mb-6 border-b-4 border-neon-pink pb-2 inline-block" {...props} />,
-              h2: ({node, ...props}) => <h2 className="text-3xl md:text-4xl font-black text-neon-green mt-12 mb-6 flex items-center gap-2 before:content-['#'] before:text-neon-pink" {...props} />,
-              h3: ({node, ...props}) => <h3 className="text-2xl md:text-3xl font-bold text-white mt-8 mb-4 border-l-4 border-neon-green pl-4" {...props} />,
-              a: ({node, ...props}) => (
-                <a 
-                  className="text-neon-pink font-bold border-b-2 border-neon-pink hover:bg-neon-pink hover:text-void transition-all no-underline px-1 -mx-1" 
-                  {...props} 
-                />
-              ),
-              ul: ({node, ...props}) => <ul className="space-y-2 my-6 list-none pl-0" {...props} />,
-              ol: ({node, ...props}) => <ol className="space-y-2 my-6 list-decimal list-inside marker:text-neon-pink marker:font-bold" {...props} />,
-              li: ({node, ...props}) => (
-                <li className="flex gap-3 items-start" {...props}>
-                  <span className="text-neon-pink font-bold mt-1.5 text-xs">►</span>
-                  <span>{props.children}</span>
-                </li>
-              ),
-              hr: ({node, ...props}) => <hr className="border-t-4 border-dashed border-white/20 my-12" {...props} />,
-              code({ node, inline, className, children, ...props }: any) {
-                const match = /language-(\w+)/.exec(className || '');
-                return !inline && match ? (
-                  <div className="neobrutal-box border-neon-green shadow-[4px_4px_0px_0px_var(--color-neon-green)] my-8 overflow-hidden">
-                    <div className="bg-neon-green text-void px-4 py-1 text-xs font-bold uppercase flex justify-between items-center border-b-2 border-neon-green">
-                      <span>{match[1]}</span>
-                      <span>TERMINAL_EXEC</span>
-                    </div>
-                    <SyntaxHighlighter
-                      style={vscDarkPlus}
-                      language={match[1]}
-                      PreTag="div"
-                      customStyle={{ margin: 0, borderRadius: 0, background: '#09090b', padding: '1.5rem' }}
-                      {...props}
-                    >
-                      {String(children).replace(/\n$/, '')}
-                    </SyntaxHighlighter>
-                  </div>
-                ) : (
-                  <code className="bg-white/10 text-neon-pink px-1.5 py-0.5 rounded text-sm font-mono border border-white/20" {...props}>
-                    {children}
-                  </code>
-                );
-              },
-              img: ({node, ...props}) => (
-                <figure className="my-10">
-                  <div className="neobrutal-box p-2 bg-white/5">
-                    <img {...props} className="w-full h-auto block grayscale hover:grayscale-0 transition-all duration-500" />
-                  </div>
-                  {props.title && <figcaption className="text-center text-xs font-mono text-neon-pink mt-2 uppercase tracking-widest">// {props.title}</figcaption>}
-                </figure>
-              ),
-              blockquote: ({node, ...props}) => (
-                <blockquote className="relative border-l-8 border-neon-pink bg-white/5 p-6 my-10 italic text-xl text-white/90" {...props}>
-                  <span className="absolute -top-4 left-4 text-6xl text-neon-pink/20 font-serif leading-none">"</span>
-                  <div className="relative z-10">
-                    {props.children}
-                  </div>
-                </blockquote>
-              )
-            }}
-          >
-            {page.content}
-          </ReactMarkdown>
+          <MarkdownRenderer content={page.content} />
         </div>
       </div>
 

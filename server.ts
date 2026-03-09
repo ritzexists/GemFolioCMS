@@ -33,17 +33,29 @@ const DEFAULT_CONFIG = {
 };
 
 // Helper to read content
+// Supports .md, .adoc, and .rst files.
 const readContent = (dir: string) => {
-  const files = fs.readdirSync(dir).filter(file => file.endsWith('.md'));
+  const files = fs.readdirSync(dir).filter(file => file.endsWith('.md') || file.endsWith('.adoc') || file.endsWith('.rst'));
   return files.map(file => {
     const content = fs.readFileSync(path.join(dir, file), 'utf-8');
-    const { data, content: body } = matter(content);
-    return {
-      slug: file.replace('.md', ''),
-      frontmatter: data,
-      content: body,
-      path: path.join(dir, file) // Internal use only
-    };
+    
+    if (file.endsWith('.md')) {
+      const { data, content: body } = matter(content);
+      return {
+        slug: file.replace('.md', ''),
+        frontmatter: data,
+        content: body,
+        path: path.join(dir, file)
+      };
+    } else {
+      // TODO: Implement frontmatter parsing for AsciiDoc and reStructuredText
+      return {
+        slug: file.replace(/\.(adoc|rst)$/, ''),
+        frontmatter: {}, 
+        content: content,
+        path: path.join(dir, file)
+      };
+    }
   });
 };
 
@@ -86,8 +98,8 @@ app.get('/api/posts', (req, res) => {
     const posts = readContent(POSTS_DIR);
     // Sort by date desc
     posts.sort((a, b) => {
-      const dateA = new Date(a.frontmatter.date || 0).getTime();
-      const dateB = new Date(b.frontmatter.date || 0).getTime();
+      const dateA = new Date((a.frontmatter as any).date || 0).getTime();
+      const dateB = new Date((b.frontmatter as any).date || 0).getTime();
       return dateB - dateA;
     });
     res.json(posts);
@@ -101,7 +113,7 @@ app.get('/api/posts', (req, res) => {
 app.get('/api/posts/:slug', (req, res) => {
   try {
     const { slug } = req.params;
-    const filePath = path.join(POSTS_DIR, `${slug}.md`);
+    const filePath = path.join(POSTS_DIR, `${path.basename(slug)}.md`);
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'Post not found' });
     }
@@ -127,7 +139,7 @@ app.get('/api/pages', (req, res) => {
 app.get('/api/pages/:slug', (req, res) => {
   try {
     const { slug } = req.params;
-    const filePath = path.join(PAGES_DIR, `${slug}.md`);
+    const filePath = path.join(PAGES_DIR, `${path.basename(slug)}.md`);
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: 'Page not found' });
     }
@@ -158,7 +170,7 @@ app.post('/api/content', (req, res) => {
       }
     }
 
-    const filePath = path.join(dir, `${slug}.md`);
+    const filePath = path.join(dir, `${path.basename(slug)}.md`);
     const fileContent = matter.stringify(content, frontmatter);
     
     fs.writeFileSync(filePath, fileContent);
@@ -180,7 +192,7 @@ app.delete('/api/content/:type/:slug', async (req, res) => {
     console.log(`[DELETE] Request received for type: ${type}, slug: ${slug}`);
     
     const dir = type === 'page' ? PAGES_DIR : POSTS_DIR;
-    const filePath = path.join(dir, `${slug}.md`);
+    const filePath = path.join(dir, `${path.basename(slug)}.md`);
     console.log(`[DELETE] Attempting to delete file: ${filePath}`);
 
     try {

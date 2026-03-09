@@ -8,6 +8,7 @@ Welcome to the Neobrutalism Portfolio & Blog! This guide will help you navigate 
 The top navigation bar provides links to the main sections:
 - **HOME**: The landing page with the interactive terminal.
 - **BLOG**: A list of all blog posts.
+- **TALKS**: A list of conference presentations.
 - **WORKS**: A portfolio of projects (configurable).
 - **ADMIN**: The content management dashboard.
 

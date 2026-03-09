@@ -8,9 +8,11 @@ A modern, high-performance portfolio and blog template built with React, Vite, a
 - **Interactive Terminal**: A functional CLI for navigation, searching posts, and fun easter eggs.
 - **Admin Dashboard**: Manage posts, pages, and site configuration directly from the browser.
 - **Markdown Support**: Full markdown rendering with syntax highlighting for code blocks.
-- **Dynamic Content**: Create custom pages with flexible layouts (grid, list, etc.).
+- **Math Support**: Render mathematical formulas using LaTeX syntax (via MathJax/KaTeX).
+- **AsciiDoc & reStructuredText**: Native support for `.adoc` and `.rst` content formats.
+- **Dynamic Content**: Create custom pages with flexible layouts (grid, list, etc.), including a dedicated Presentations page for conference talks.
 - **Theme System**: Toggle between different visual themes via the terminal.
-- **Import Tool**: Import content from external URLs to quickly populate your blog.
+- **Import Tool**: Import content from external URLs (Markdown, HTML) to quickly populate your blog.
 
 ## Tech Stack
 
@@ -61,6 +63,14 @@ src/
 ```
 
 ## Production Deployment
+
+To generate a static site for production deployment, run the following command:
+
+```bash
+npm run build
+```
+
+The static files will be generated in the `dist/` directory.
 
 ### Disabling the Admin Panel
 For a static website deployment where you don't want the admin interface exposed, you can disable it by setting an environment variable.
