@@ -1,0 +1,53 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+interface SiteConfig {
+  siteName: string;
+  footerText: string;
+  heroTitle: string;
+  heroDescription: string;
+}
+
+const DEFAULT_CONFIG: SiteConfig = {
+  siteName: "FemmeBrutal_CMS",
+  footerText: "Constructed in the void",
+  heroTitle: "REALITY\nIS\nOPTIONAL",
+  heroDescription: "A static-site generator for the end of the world. Markdown-based, brutalist, and unapologetically loud."
+};
+
+interface SiteConfigContextType {
+  config: SiteConfig;
+  refreshConfig: () => Promise<void>;
+}
+
+const SiteConfigContext = createContext<SiteConfigContextType>({
+  config: DEFAULT_CONFIG,
+  refreshConfig: async () => {},
+});
+
+export const useSiteConfig = () => useContext(SiteConfigContext);
+
+export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [config, setConfig] = useState<SiteConfig>(DEFAULT_CONFIG);
+
+  const fetchConfig = async () => {
+    try {
+      const res = await fetch('/api/config');
+      if (res.ok) {
+        const data = await res.json();
+        setConfig(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch site config", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchConfig();
+  }, []);
+
+  return (
+    <SiteConfigContext.Provider value={{ config, refreshConfig: fetchConfig }}>
+      {children}
+    </SiteConfigContext.Provider>
+  );
+};
