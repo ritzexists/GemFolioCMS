@@ -74,10 +74,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {!location.pathname.startsWith('/admin') && (
         <footer className="border-t-4 border-neon-pink p-6 text-center text-xs uppercase text-white/50">
-          <p>
-            {config.footerText}
-            <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">AGPL 3 License</a>
-          </p>
+          <p>{config.footerText}</p>
         </footer>
       )}
     </div>
