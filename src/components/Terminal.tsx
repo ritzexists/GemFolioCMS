@@ -356,14 +356,28 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
   ];
 
   const fortunes = [
-    "To err is human... to really foul up requires the root password.",
-    "Unix is user friendly. It's just very picky about who its friends are.",
+    "A journey of a thousand miles begins with a single step.",
+    "The only way to do great work is to love what you do.",
+    "Believe you can and you're halfway there.",
+    "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+    "Your time is limited, so don't waste it living someone else's life.",
+    "The future belongs to those who believe in the beauty of their dreams.",
+    "In the middle of every difficulty lies opportunity.",
+    "What you get by achieving your goals is not as important as what you become by achieving your goals.",
+    "Everything you've ever wanted is on the other side of fear.",
+    "Hardships often prepare ordinary people for an extraordinary destiny.",
+    "The only limit to our realization of tomorrow will be our doubts of today.",
+    "It does not matter how slowly you go as long as you do not stop.",
+    "Everything has beauty, but not everyone sees it.",
+    "Life is what happens when you're busy making other plans.",
+    "Get busy living or get busy dying.",
+    "You only live once, but if you do it right, once is enough.",
+    "Many of life's failures are people who did not realize how close they were to success when they gave up.",
+    "If you want to live a happy life, tie it to a goal, not to people or things.",
+    "Never let the fear of striking out keep you from playing the game.",
+    "Money and success don't change people; they merely amplify what is already there.",
     "The best way to predict the future is to invent it.",
-    "Avoid the gates of hell. Use Linux.",
     "Don't patch bad code - rewrite it.",
-    "rm -rf / is not a backup strategy.",
-    "Software is like sex: it's better when it's free.",
-    "There are two major products that come out of Berkeley: LSD and UNIX.",
     "Talk is cheap. Show me the code.",
     "Computers are like air conditioners: they stop working when you open windows."
   ];
@@ -376,7 +390,17 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
     { term: "Daemon", preview: "A program that runs in the background, rather than under direct user control.", url: "http://catb.org/jargon/html/D/daemon.html" },
     { term: "Bikeshedding", preview: "Discussions about minor issues while ignoring more complex ones.", url: "http://catb.org/jargon/html/B/bikeshedding.html" },
     { term: "Foo", preview: "The first metasyntactic variable.", url: "http://catb.org/jargon/html/F/foo.html" },
-    { term: "Kludge", preview: "A clumsy or inelegant solution to a problem.", url: "http://catb.org/jargon/html/K/kludge.html" }
+    { term: "Kludge", preview: "A clumsy or inelegant solution to a problem.", url: "http://catb.org/jargon/html/K/kludge.html" },
+    { term: "Cruft", preview: "Unnecessary code or hardware that is still present in a system.", url: "http://catb.org/jargon/html/C/cruft.html" },
+    { term: "Frob", preview: "To manipulate something in a small, often aimless way.", url: "http://catb.org/jargon/html/F/frob.html" },
+    { term: "Glitch", preview: "A sudden, usually temporary malfunction or fault in equipment.", url: "http://catb.org/jargon/html/G/glitch.html" },
+    { term: "Hacker", preview: "A person who enjoys exploring the limits of what is possible.", url: "http://catb.org/jargon/html/H/hacker.html" },
+    { term: "Magic", preview: "Code that works but whose operation is not immediately obvious.", url: "http://catb.org/jargon/html/M/magic.html" },
+    { term: "Nerd", preview: "A person who is extremely interested in a technical subject.", url: "http://catb.org/jargon/html/N/nerd.html" },
+    { term: "Patch", preview: "A piece of software designed to update a computer program.", url: "http://catb.org/jargon/html/P/patch.html" },
+    { term: "Spam", preview: "Irrelevant or unsolicited messages sent over the internet.", url: "http://catb.org/jargon/html/S/spam.html" },
+    { term: "Troll", preview: "A person who starts quarrels or upsets people on the internet.", url: "http://catb.org/jargon/html/T/troll.html" },
+    { term: "Wizard", preview: "A person who is extremely skilled in a particular field.", url: "http://catb.org/jargon/html/W/wizard.html" }
   ];
 
   /**
