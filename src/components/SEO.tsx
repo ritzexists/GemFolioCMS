@@ -8,9 +8,9 @@ interface SEOProps {
 }
 
 export default function SEO({ title, description, canonical }: SEOProps) {
-  const siteTitle = 'Neobrutalism Template';
+  const siteTitle = 'GemBrutalCMS';
   const fullTitle = title ? `${title} | ${siteTitle}` : siteTitle;
-  const siteDescription = description || 'A modern, high-performance portfolio and blog template built with React, Vite, and Tailwind CSS.';
+  const siteDescription = description || 'A femme maximalist neobrutalist static-site-generator-style CMS with markdown file backing, admin dashboard, and terminal aesthetics.';
 
   return (
     <Helmet>
