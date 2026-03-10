@@ -70,14 +70,12 @@ const readContent = (dir: string, baseDir: string = dir) => {
 
       if (file.endsWith('.md')) {
         const { data, content: body } = matter(content);
-        if (data && Object.keys(data).length > 0) {
-          results.push({
-            slug,
-            frontmatter: data,
-            content: body,
-            path: filePath
-          });
-        }
+        results.push({
+          slug,
+          frontmatter: data || {},
+          content: body,
+          path: filePath
+        });
       } else {
         results.push({
           slug,
@@ -142,7 +140,9 @@ app.post('/api/config.json', (req, res) => {
  */
 app.get('/api/posts.json', (req, res) => {
   try {
-    const posts = readContent(POSTS_DIR).filter(p => p.frontmatter && (p.frontmatter as any).title);
+    const posts = readContent(POSTS_DIR)
+      .filter(p => p.frontmatter && (p.frontmatter as any).title)
+      .map(({ path, ...rest }) => rest);
     // Sort by date desc
     posts.sort((a, b) => {
       const dateA = new Date((a.frontmatter as any).date || 0).getTime();
@@ -260,7 +260,7 @@ app.get('/api/posts/:slug(*).json', (req, res) => {
  */
 app.get('/api/pages.json', (req, res) => {
   try {
-    const pages = readContent(PAGES_DIR);
+    const pages = readContent(PAGES_DIR).map(({ path, ...rest }) => rest);
     res.json(pages);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch pages' });

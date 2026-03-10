@@ -43,14 +43,12 @@ const readContent = (dir: string, baseDir: string = dir) => {
 
       if (file.endsWith('.md')) {
         const { data, content: body } = matter(content);
-        if (data && Object.keys(data).length > 0) {
-          results.push({
-            slug,
-            frontmatter: data,
-            content: body,
-            path: filePath
-          });
-        }
+        results.push({
+          slug,
+          frontmatter: data || {},
+          content: body,
+          path: filePath
+        });
       } else {
         results.push({
           slug,
@@ -93,32 +91,37 @@ async function generate() {
   fs.writeFileSync(path.join(apiDir, 'config.json'), JSON.stringify(config));
 
   // 3. Generate Posts
-  const posts = readContent(POSTS_DIR).filter(p => p.frontmatter && (p.frontmatter as any).title);
+  const allPosts = readContent(POSTS_DIR);
+  const posts = allPosts.filter(p => p.frontmatter && (p.frontmatter as any).title);
   posts.sort((a, b) => {
     const dateA = new Date((a.frontmatter as any).date || 0).getTime();
     const dateB = new Date((b.frontmatter as any).date || 0).getTime();
     return dateB - dateA;
   });
-  fs.writeFileSync(path.join(apiDir, 'posts.json'), JSON.stringify(posts));
+  const postsForList = posts.map(({ path, ...rest }) => rest);
+  fs.writeFileSync(path.join(apiDir, 'posts.json'), JSON.stringify(postsForList));
 
   // Write individual posts
-  posts.forEach(post => {
+  allPosts.forEach(post => {
     const postPath = path.join(apiDir, 'posts', `${post.slug}.json`);
     const postDir = path.dirname(postPath);
     if (!fs.existsSync(postDir)) fs.mkdirSync(postDir, { recursive: true });
-    fs.writeFileSync(postPath, JSON.stringify(post));
+    const { path: _, ...postData } = post;
+    fs.writeFileSync(postPath, JSON.stringify(postData));
   });
 
   // 4. Generate Pages
-  const pages = readContent(PAGES_DIR);
-  fs.writeFileSync(path.join(apiDir, 'pages.json'), JSON.stringify(pages));
+  const allPages = readContent(PAGES_DIR);
+  const pagesForList = allPages.map(({ path, ...rest }) => rest);
+  fs.writeFileSync(path.join(apiDir, 'pages.json'), JSON.stringify(pagesForList));
 
   // Write individual pages
-  pages.forEach(page => {
+  allPages.forEach(page => {
     const pagePath = path.join(apiDir, 'pages', `${page.slug}.json`);
     const pageDir = path.dirname(pagePath);
     if (!fs.existsSync(pageDir)) fs.mkdirSync(pageDir, { recursive: true });
-    fs.writeFileSync(pagePath, JSON.stringify(page));
+    const { path: _, ...pageData } = page;
+    fs.writeFileSync(pagePath, JSON.stringify(pageData));
   });
 
   // 5. Generate RSS
@@ -168,8 +171,8 @@ async function generate() {
     '/blog',
     '/profile',
     ...(process.env.VITE_DISABLE_ADMIN === 'true' ? [] : ['/admin']),
-    ...posts.map(p => `/blog/${p.slug}`),
-    ...pages.map(p => `/p/${p.slug}`)
+    ...allPosts.map(p => `/blog/${p.slug}`),
+    ...allPages.map(p => `/p/${p.slug}`)
   ];
 
   routes.forEach(route => {
