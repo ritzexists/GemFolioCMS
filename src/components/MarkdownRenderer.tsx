@@ -7,6 +7,7 @@ import 'katex/dist/katex.min.css';
 
 interface MarkdownRendererProps {
   content: string;
+  basePath?: string;
 }
 
 /**
@@ -18,12 +19,23 @@ interface MarkdownRendererProps {
  * - Custom neobrutalist styling
  * 
  * @param {string} content - The markdown content to render.
+ * @param {string} basePath - Base path for relative URLs.
  */
-export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
+export default function MarkdownRenderer({ content, basePath }: MarkdownRendererProps) {
+  const urlTransform = (uri: string) => {
+    if (uri.startsWith('http') || uri.startsWith('/') || !basePath) {
+      return uri;
+    }
+    // Remove leading ./ if present
+    const cleanUri = uri.startsWith('./') ? uri.substring(2) : uri;
+    return `${basePath.endsWith('/') ? basePath : basePath + '/'}${cleanUri}`;
+  };
+
   return (
     <ReactMarkdown
       remarkPlugins={[remarkMath]}
       rehypePlugins={[rehypeKatex]}
+      urlTransform={urlTransform}
       components={{
         h1: ({node, ...props}) => <h1 className="text-4xl md:text-5xl font-black text-neon-green mb-6 border-b-4 border-neon-pink pb-2 inline-block" {...props} />,
         h2: ({node, ...props}) => <h2 className="text-3xl md:text-4xl font-black text-neon-green mt-12 mb-6 flex items-center gap-2 before:content-['#'] before:text-neon-pink" {...props} />,

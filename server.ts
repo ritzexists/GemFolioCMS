@@ -6,6 +6,7 @@ import matter from 'gray-matter';
 import TurndownService from 'turndown';
 import * as cheerio from 'cheerio';
 import { Feed } from 'feed';
+import { DEFAULT_CONFIG } from './src/constants';
 
 const app = express();
 const PORT = 3000;
@@ -19,19 +20,15 @@ const POSTS_DIR = path.join(CONTENT_DIR, 'posts');
 const PAGES_DIR = path.join(CONTENT_DIR, 'pages');
 const CONFIG_FILE = path.join(process.cwd(), 'site-config.json');
 
+// Serve content directory as static files
+// This allows referencing local images in markdown via /content/path/to/image
+app.use('/content', express.static(CONTENT_DIR));
+
 [CONTENT_DIR, POSTS_DIR, PAGES_DIR].forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
 });
-
-// Default Config
-const DEFAULT_CONFIG = {
-  siteName: "GemBrutalCMS",
-  footerText: "Constructed in the void",
-  heroTitle: "REALITY\nIS\nOPTIONAL",
-  heroDescription: "A static-site generator for the end of the world. Markdown-based, brutalist, and unapologetically loud."
-};
 
 // Helper to read content
 // Supports .md, .adoc, and .rst files.

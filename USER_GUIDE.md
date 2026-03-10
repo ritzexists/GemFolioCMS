@@ -36,7 +36,26 @@ The Admin Dashboard allows you to manage your content without touching code.
 ### Accessing Admin
 Navigate to `/admin`. In a real deployment, you should secure this route.
 
-> **Note:** For production static sites, you can disable the admin panel entirely by setting `VITE_DISABLE_ADMIN=true` in your environment variables. See the README for details.
+> **Note:** For production static sites, the admin panel is disabled by default for security. To enable it in production, you must set `VITE_DISABLE_ADMIN=false` during the build process. See the README for details.
+
+### Working with Images
+You can use both external URLs and local images in your content.
+
+**Using Local Images:**
+1. Upload or place your image files in the appropriate content directory:
+   - For blog posts: `./content/posts/`
+   - For pages: `./content/pages/`
+2. In the Markdown editor, reference the image using a relative path:
+   ```markdown
+   ![My Local Image](./my-photo.jpg "Optional Title")
+   ```
+3. The preview window will automatically resolve these paths so you can see your images while editing.
+
+**Using External Images:**
+Simply use the full URL:
+```markdown
+![External Image](https://example.com/image.png)
+```
 
 ### Managing Content
 - **Sidebar**: The left sidebar lists all Posts and Pages. Use the tabs to switch between them.

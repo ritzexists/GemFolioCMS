@@ -37,6 +37,12 @@ export default function Page() {
   if (loading) return <div className="text-neon-pink animate-pulse text-center mt-20">LOADING SECTOR...</div>;
   if (!page) return <div className="text-red-500 text-center mt-20">404: SECTOR NOT FOUND</div>;
 
+  const resolveImagePath = (src: string) => {
+    if (!src || src.startsWith('http') || src.startsWith('/')) return src;
+    const cleanSrc = src.startsWith('./') ? src.substring(2) : src;
+    return `/content/pages/${cleanSrc}`;
+  };
+
   const renderLayout = () => {
     switch (page.frontmatter.layout) {
       case 'portfolio':
@@ -58,7 +64,7 @@ export default function Page() {
                   {/* Image Section - 2 parts (40%) */}
                   <div className="w-full lg:w-2/5 h-48 lg:h-auto border-b-2 lg:border-b-0 lg:border-r-2 border-neon-pink relative overflow-hidden shrink-0">
                     <img 
-                      src={item.image} 
+                      src={resolveImagePath(item.image)} 
                       alt={item.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 group-hover:grayscale"
                       draggable={false}
@@ -95,7 +101,7 @@ export default function Page() {
                   hoverEffect="skew"
                 >
                   <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-neon-pink mb-4 group-hover:rotate-12 transition-transform card-action">
-                    <img src={item.image} alt={item.title} className="w-full h-full object-cover" draggable={false} />
+                    <img src={resolveImagePath(item.image)} alt={item.title} className="w-full h-full object-cover" draggable={false} />
                   </div>
                   <h3 className="font-bold text-lg text-white mb-1 card-action">{item.title}</h3>
                   <span className={`text-xs font-mono px-2 py-0.5 border ${
@@ -122,7 +128,7 @@ export default function Page() {
         </h1>
         
         <div className="markdown-body prose prose-invert prose-headings:font-black prose-headings:uppercase prose-headings:text-neon-green prose-p:text-white/90 prose-p:leading-relaxed prose-strong:text-neon-pink prose-strong:font-black max-w-none">
-          <MarkdownRenderer content={page.content} />
+          <MarkdownRenderer content={page.content} basePath="/content/pages/" />
         </div>
       </div>
 

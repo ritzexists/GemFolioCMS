@@ -1,5 +1,6 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useSiteConfig } from '../context/SiteConfigContext';
 
 interface SEOProps {
   title?: string;
@@ -8,9 +9,10 @@ interface SEOProps {
 }
 
 export default function SEO({ title, description, canonical }: SEOProps) {
-  const siteTitle = 'GemBrutalCMS';
+  const { config } = useSiteConfig();
+  const siteTitle = config.siteName;
   const fullTitle = title ? `${title} | ${siteTitle}` : siteTitle;
-  const siteDescription = description || 'A femme maximalist neobrutalist static-site-generator-style CMS with markdown file backing, admin dashboard, and terminal aesthetics.';
+  const siteDescription = description || config.heroDescription;
 
   return (
     <Helmet>

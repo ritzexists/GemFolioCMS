@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { DEFAULT_CONFIG } from '../constants';
 
 interface SiteConfig {
   siteName: string;
@@ -9,16 +10,6 @@ interface SiteConfig {
   bannerStart?: string;
   bannerEnd?: string;
 }
-
-const DEFAULT_CONFIG: SiteConfig = {
-  siteName: "GemBrutalCMS",
-  footerText: "Constructed in the void",
-  heroTitle: "REALITY\nIS\nOPTIONAL",
-  heroDescription: "A static-site generator for the end of the world. Markdown-based, brutalist, and unapologetically loud.",
-  bannerMessage: "",
-  bannerStart: "",
-  bannerEnd: ""
-};
 
 interface SiteConfigContextType {
   config: SiteConfig;

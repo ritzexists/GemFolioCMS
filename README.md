@@ -89,17 +89,21 @@ npm run build
 
 The static files will be generated in the `dist/` directory.
 
-### Disabling the Admin Panel
-For a static website deployment where you don't want the admin interface exposed, you can disable it by setting an environment variable.
+### Admin Panel in Production
+By default, the production build disables the admin panel for security and to ensure a clean static output. This is controlled by the `VITE_DISABLE_ADMIN` environment variable, which is set to `true` automatically during the `npm run build` process.
 
-1. Create a `.env` file in the root directory (or set it in your deployment platform).
-2. Add the following line:
-   ```env
-   VITE_DISABLE_ADMIN=true
-   ```
-3. Rebuild the application: `npm run build`.
+If you explicitly want to include the admin panel in your production build, you can override this by setting the variable to `false`:
 
-The `/admin` route will no longer be accessible.
+```bash
+VITE_DISABLE_ADMIN=false npm run build
+```
+
+### Local Image Support
+You can store images directly in the `./content` directory and reference them in your Markdown files using relative paths.
+
+1. Place your images in `./content/posts/` or `./content/pages/`.
+2. Reference them in Markdown: `![Alt Text](./my-image.png)`.
+3. The development server and static generator will automatically resolve these paths and include the images in the build.
 
 ## Documentation
 

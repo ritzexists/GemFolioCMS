@@ -2,19 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
 import { Feed } from 'feed';
+import { DEFAULT_CONFIG } from '../src/constants';
 
 const DIST_DIR = path.join(process.cwd(), 'dist');
 const CONTENT_DIR = path.join(process.cwd(), 'content');
 const POSTS_DIR = path.join(CONTENT_DIR, 'posts');
 const PAGES_DIR = path.join(CONTENT_DIR, 'pages');
 const CONFIG_FILE = path.join(process.cwd(), 'site-config.json');
-
-const DEFAULT_CONFIG = {
-  siteName: "GemBrutalCMS",
-  footerText: "Constructed in the void",
-  heroTitle: "REALITY\nIS\nOPTIONAL",
-  heroDescription: "A static-site generator for the end of the world. Markdown-based, brutalist, and unapologetically loud."
-};
 
 const readContent = (dir: string) => {
   if (!fs.existsSync(dir)) return [];
@@ -50,7 +44,15 @@ async function generate() {
   const apiDir = path.join(DIST_DIR, 'api');
   if (!fs.existsSync(apiDir)) fs.mkdirSync(apiDir, { recursive: true });
 
-  // 2. Generate Config
+  // 2. Copy Content Directory (for images)
+  // This ensures that local images referenced in markdown are available in the static build
+  const distContentDir = path.join(DIST_DIR, 'content');
+  if (fs.existsSync(CONTENT_DIR)) {
+    console.log('Copying content directory to dist...');
+    fs.cpSync(CONTENT_DIR, distContentDir, { recursive: true });
+  }
+
+  // 3. Generate Config
   let config = DEFAULT_CONFIG;
   if (fs.existsSync(CONFIG_FILE)) {
     config = { ...DEFAULT_CONFIG, ...JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8')) };
@@ -101,7 +103,7 @@ async function generate() {
   const routes = [
     '/blog',
     '/profile',
-    '/admin',
+    ...(process.env.VITE_DISABLE_ADMIN === 'true' ? [] : ['/admin']),
     ...posts.map(p => `/blog/${p.slug}`),
     ...pages.map(p => `/p/${p.slug}`)
   ];
