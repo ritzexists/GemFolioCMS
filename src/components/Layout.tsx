@@ -9,7 +9,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { config } = useSiteConfig();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
-  const [intrinsicWidth, setIntrinsicWidth] = useState(0);
+  const [showStatus, setShowStatus] = useState(false);
   
   const headerRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
@@ -28,66 +28,46 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     </div>
   );
 
-  // Measure intrinsic width of the navigation menu
-  useEffect(() => {
-    if (navRef.current && intrinsicWidth === 0) {
-      const width = navRef.current.scrollWidth;
-      if (width > 0) {
-        setIntrinsicWidth(width);
-      }
-    }
-  }, [intrinsicWidth]);
-
   // Dynamic overflow detection
   useEffect(() => {
-    if (!headerRef.current) return;
-
     const check = () => {
-      if (headerRef.current && intrinsicWidth > 0) {
-        const headerWidth = headerRef.current.clientWidth;
-        const logoWidth = logoRef.current?.offsetWidth || 0;
-        
-        const isLandscape = window.matchMedia('(orientation: landscape)').matches;
-        const isWide = window.innerWidth >= 1152;
-        const isTouch = window.matchMedia('(pointer: coarse)').matches;
-        
-        // Heuristic for "full screen" - on mobile/tablet, the viewport width matches the screen dimensions
-        const isProbablyFullScreen = Math.abs(window.innerWidth - window.screen.width) < 20 || 
-                                     Math.abs(window.innerWidth - window.screen.height) < 20;
+      const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+      const isWide = window.innerWidth >= 1152;
+      const isTouch = window.matchMedia('(pointer: coarse)').matches;
+      
+      // Detect if the app is running in a multi-tasking split view on mobile/tablet
+      // In landscape, the physical screen width is the larger of screen.width or screen.height
+      const screenWidth = Math.max(window.screen.width, window.screen.height);
+      const isMultiTasking = window.innerWidth < screenWidth * 0.85; // 85% threshold accounts for safe areas
 
-        // Status is only shown if wide AND (not landscape OR not touch)
-        // This keeps it hidden on landscape mobile/tablet as requested
-        const canShowStatus = isWide && (!isLandscape || !isTouch);
-        const statusWidth = canShowStatus ? 160 : 0;
-        
-        const availableSpace = headerWidth - logoWidth - statusWidth - 40;
-        const overflow = availableSpace < intrinsicWidth;
-        
-        let shouldBeHamburger = false;
-        
-        if (isLandscape && isProbablyFullScreen) {
-          // "always appears on full screen landscape tablet and mobile layouts"
-          shouldBeHamburger = false;
-        } else {
-          // Standard logic for desktop resizing and multitasking
-          shouldBeHamburger = overflow || (!isLandscape && !isWide);
-        }
-        
-        setIsOverflowing(shouldBeHamburger);
+      const isLandscapeMobileTablet = isLandscape && isTouch && !isMultiTasking;
+      
+      let shouldBeHamburger = !isWide;
+      let canShowStatus = isWide;
+
+      if (isLandscapeMobileTablet) {
+        // "except on landscape full screen mobile or tablet where we strip the 'system online' menu and retain the legacy scrolling behavior"
+        shouldBeHamburger = false;
+        canShowStatus = false;
       }
+      
+      setIsOverflowing(shouldBeHamburger);
+      setShowStatus(canShowStatus);
     };
 
     const observer = new ResizeObserver(check);
-    observer.observe(headerRef.current);
+    if (headerRef.current) observer.observe(headerRef.current);
     
+    window.addEventListener('resize', check);
     window.addEventListener('orientationchange', check);
     check();
 
     return () => {
       observer.disconnect();
+      window.removeEventListener('resize', check);
       window.removeEventListener('orientationchange', check);
     };
-  }, [intrinsicWidth]);
+  }, []);
 
   const NavItem = ({ to, icon: Icon, label, onClick }: { to: string; icon: any; label: string; onClick?: () => void }) => {
     const isActive = location.pathname === to;
@@ -173,8 +153,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div 
             ref={statusRef}
             className={cn(
-              "hidden items-center px-6 border-l-2 border-neon-pink",
-              !isOverflowing && "min-[1152px]:flex"
+              "items-center px-6 border-l-2 border-neon-pink",
+              showStatus ? "flex" : "hidden"
             )}
           >
             <div className="w-3 h-3 bg-neon-green rounded-full mr-2 animate-pulse" />

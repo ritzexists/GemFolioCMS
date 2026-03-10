@@ -43,11 +43,12 @@ export default function Admin() {
 
   /**
    * Fetches all posts and pages from the API.
+   * Resets selection state after loading.
    */
   const loadContent = () => {
     logger.debug('Loading admin content...');
-    fetch('/api/posts').then(res => res.json()).then(setPosts);
-    fetch('/api/pages').then(res => res.json()).then(setPages);
+    fetch('/api/posts.json').then(res => res.json()).then(setPosts);
+    fetch('/api/pages.json').then(res => res.json()).then(setPages);
     setSelectedForDeletion(new Set());
   };
 
@@ -115,6 +116,12 @@ export default function Admin() {
   /**
    * Handles saving a post or page.
    */
+  /**
+   * Handles form submission for saving a post or page.
+   * Sends the payload to the server and refreshes the content list.
+   * 
+   * @param data - Form data containing slug, frontmatter, and content.
+   */
   const onSubmit = async (data: any) => {
     try {
       logger.info(`Saving content: ${data.slug}`);
@@ -133,7 +140,7 @@ export default function Admin() {
         }
       };
 
-      const res = await fetch('/api/content', {
+      const res = await fetch('/api/content.json', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -156,10 +163,16 @@ export default function Admin() {
   /**
    * Handles saving site configuration settings.
    */
+  /**
+   * Handles form submission for updating site settings.
+   * Sends the updated configuration to the server.
+   * 
+   * @param data - Form data containing site settings.
+   */
   const onSettingsSubmit = async (data: any) => {
     try {
       logger.info("Saving site settings");
-      const res = await fetch('/api/config', {
+      const res = await fetch('/api/config.json', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -184,12 +197,17 @@ export default function Admin() {
    * Imports content from an external URL.
    * Parses the HTML to extract title, description, and content.
    */
+  /**
+   * Handles importing content from an external URL.
+   * Prompts the user for a URL, sends it to the server for parsing,
+   * and populates the editor with the extracted content.
+   */
   const handleImport = async () => {
     if (!importUrl) return;
     setIsImporting(true);
     logger.info(`Importing content from ${importUrl}`);
     try {
-      const res = await fetch('/api/import', {
+      const res = await fetch('/api/import.json', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: importUrl })
@@ -243,7 +261,8 @@ export default function Admin() {
   };
 
   /**
-   * Deletes selected items.
+   * Handles the deletion of selected content items.
+   * Prompts for confirmation before sending delete requests to the server.
    */
   const handleDelete = async () => {
     if (selectedForDeletion.size === 0) return;
@@ -252,7 +271,7 @@ export default function Admin() {
     logger.info(`Deleting ${selectedForDeletion.size} items`);
     try {
       const deletePromises = Array.from(selectedForDeletion).map(slug => 
-        fetch(`/api/content/${contentType}/${slug}`, {
+        fetch(`/api/content/${contentType}/${slug}.json`, {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' }
         })
@@ -269,6 +288,11 @@ export default function Admin() {
     }
   };
 
+  /**
+   * Toggles the selection state of a content item for bulk deletion.
+   * 
+   * @param slug - The slug of the item to toggle.
+   */
   const toggleSelection = (slug: string) => {
     const newSelection = new Set(selectedForDeletion);
     if (newSelection.has(slug)) {

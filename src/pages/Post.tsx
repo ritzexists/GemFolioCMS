@@ -15,12 +15,13 @@ interface PostData {
 }
 
 export default function Post() {
-  const { slug } = useParams();
+  const params = useParams();
+  const slug = params['*'];
   const [post, setPost] = useState<PostData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/posts/${slug}`)
+    fetch(`/api/posts/${slug}.json`)
       .then(res => res.json())
       .then(data => {
         setPost(data);
@@ -34,6 +35,8 @@ export default function Post() {
 
   if (loading) return <div className="text-neon-pink animate-pulse text-center mt-20">DECRYPTING...</div>;
   if (!post) return <div className="text-red-500 text-center mt-20">404: DATA NOT FOUND</div>;
+
+  const postBasePath = slug ? `/content/posts/${slug}/` : '/content/posts/';
 
   return (
     <article className="max-w-3xl mx-auto">
@@ -57,7 +60,7 @@ export default function Post() {
       </header>
 
       <div className="markdown-body prose prose-invert prose-headings:font-black prose-headings:uppercase prose-headings:text-neon-green prose-p:text-white/90 prose-p:leading-relaxed prose-strong:text-neon-pink prose-strong:font-black max-w-none">
-        <MarkdownRenderer content={post.content} basePath="/content/posts/" />
+        <MarkdownRenderer content={post.content} basePath={postBasePath} />
       </div>
     </article>
   );

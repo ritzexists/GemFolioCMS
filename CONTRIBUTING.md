@@ -1,6 +1,6 @@
 # Contributing Guide
 
-Thank you for your interest in contributing to the Neobrutalism Portfolio! We welcome bug reports, feature requests, and pull requests.
+Thank you for your interest in contributing to the GemFolioCMS! We welcome bug reports, feature requests, and pull requests.
 
 ## Development Setup
 

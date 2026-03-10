@@ -28,7 +28,7 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const fetchConfig = async () => {
     try {
-      const res = await fetch('/api/config');
+      const res = await fetch('/api/config.json');
       if (res.ok) {
         const data = await res.json();
         setConfig(data);

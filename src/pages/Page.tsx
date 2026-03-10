@@ -17,12 +17,13 @@ interface PageData {
 }
 
 export default function Page() {
-  const { slug } = useParams();
+  const params = useParams();
+  const slug = params['*'];
   const [page, setPage] = useState<PageData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/pages/${slug}`)
+    fetch(`/api/pages/${slug}.json`)
       .then(res => res.json())
       .then(data => {
         setPage(data);
@@ -37,10 +38,12 @@ export default function Page() {
   if (loading) return <div className="text-neon-pink animate-pulse text-center mt-20">LOADING SECTOR...</div>;
   if (!page) return <div className="text-red-500 text-center mt-20">404: SECTOR NOT FOUND</div>;
 
+  const pageBasePath = slug ? `/content/pages/${slug}/` : '/content/pages/';
+
   const resolveImagePath = (src: string) => {
     if (!src || src.startsWith('http') || src.startsWith('/')) return src;
     const cleanSrc = src.startsWith('./') ? src.substring(2) : src;
-    return `/content/pages/${cleanSrc}`;
+    return `${pageBasePath}${cleanSrc}`;
   };
 
   const renderLayout = () => {
@@ -128,7 +131,7 @@ export default function Page() {
         </h1>
         
         <div className="markdown-body prose prose-invert prose-headings:font-black prose-headings:uppercase prose-headings:text-neon-green prose-p:text-white/90 prose-p:leading-relaxed prose-strong:text-neon-pink prose-strong:font-black max-w-none">
-          <MarkdownRenderer content={page.content} basePath="/content/pages/" />
+          <MarkdownRenderer content={page.content} basePath={pageBasePath} />
         </div>
       </div>
 

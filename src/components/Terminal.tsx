@@ -50,6 +50,7 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
 
   /**
    * Auto-scroll to the bottom of the terminal when new lines are added.
+   * Ensures the latest output is always visible.
    */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -349,7 +350,9 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
 
   /**
    * Handles clicking on a tag button.
-   * Simulates typing 'tag [name]' into the terminal.
+   * Simulates typing 'tag [name]' into the terminal and executes it.
+   * 
+   * @param tag - The tag name that was clicked.
    */
   const handleTagClick = async (tag: string) => {
     const cmd = `tag ${tag}`;
@@ -359,6 +362,10 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
 
   /**
    * Handles the form submission (pressing Enter).
+   * Prevents default form behavior, adds the command to the output,
+   * and triggers command processing.
+   * 
+   * @param e - The form submission event.
    */
   const handleCommand = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -453,10 +460,11 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
 
   /**
    * Initialize terminal data on mount.
-   * Fetches posts, extracts tags, and sets up the initial ASCII art.
+   * Fetches posts, extracts tags, and sets up the initial ASCII art
+   * and welcome message.
    */
   useEffect(() => {
-    fetch('/api/posts')
+    fetch('/api/posts.json')
       .then(res => res.json())
       .then(data => {
         setPosts(data);

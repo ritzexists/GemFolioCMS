@@ -24,7 +24,7 @@ export default function Blog() {
   const [localSearch, setLocalSearch] = useState(searchQuery || "");
 
   useEffect(() => {
-    fetch('/api/posts')
+    fetch('/api/posts.json')
       .then(res => res.json())
       .then(data => {
         setPosts(data);
@@ -169,33 +169,37 @@ export default function Blog() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <Link to={`/blog/${post.slug}`} className="block group">
-                <motion.div 
-                  whileHover={{ y: -5, x: -5 }}
-                  className="neobrutal-box p-6 md:p-8 hover:shadow-[8px_8px_0px_0px_var(--color-neon-green)] hover:border-neon-green transition-all"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <h2 className="text-2xl md:text-3xl font-black group-hover:text-neon-green transition-colors">
+              <motion.div 
+                whileHover={{ y: -5, x: -5 }}
+                className="neobrutal-box p-6 md:p-8 hover:shadow-[8px_8px_0px_0px_var(--color-neon-green)] hover:border-neon-green transition-all"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <Link to={`/blog/${post.slug}`} className="group/title">
+                    <h2 className="text-2xl md:text-3xl font-black group-hover/title:text-neon-green transition-colors">
                       {post.frontmatter.title}
                     </h2>
-                    <span className="font-mono text-sm border border-white/30 px-2 py-1 text-white/70">
-                      {post.frontmatter.date}
-                    </span>
-                  </div>
-                  
-                  <p className="text-lg opacity-80 mb-6 text-white/80">
-                    {post.frontmatter.description}
-                  </p>
+                  </Link>
+                  <span className="font-mono text-sm border border-white/30 px-2 py-1 text-white/70">
+                    {post.frontmatter.date}
+                  </span>
+                </div>
+                
+                <p className="text-lg opacity-80 mb-6 text-white/80">
+                  {post.frontmatter.description}
+                </p>
 
-                  <div className="flex gap-2">
-                    {post.frontmatter.tags?.map(tag => (
-                      <span key={tag} className="text-xs uppercase font-bold tracking-wider opacity-60 border border-white/20 px-2 py-1 rounded-full">
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                </motion.div>
-              </Link>
+                <div className="flex gap-2">
+                  {post.frontmatter.tags?.map(tag => (
+                    <button 
+                      key={tag} 
+                      onClick={() => setSearchParams({ tag })}
+                      className="text-xs uppercase font-bold tracking-wider opacity-60 border border-white/20 px-2 py-1 rounded-full hover:bg-neon-pink hover:text-void hover:border-neon-pink hover:opacity-100 transition-all cursor-pointer"
+                    >
+                      #{tag}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
             </motion.div>
           ))}
         </div>

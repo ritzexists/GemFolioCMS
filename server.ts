@@ -30,37 +30,79 @@ app.use('/content', express.static(CONTENT_DIR));
   }
 });
 
-// Helper to read content
-// Supports .md, .adoc, and .rst files.
-const readContent = (dir: string) => {
-  const files = fs.readdirSync(dir).filter(file => file.endsWith('.md') || file.endsWith('.adoc') || file.endsWith('.rst'));
-  return files.map(file => {
-    const content = fs.readFileSync(path.join(dir, file), 'utf-8');
+/**
+ * Helper function to recursively read content files from a directory.
+ * It parses Markdown files with frontmatter and returns an array of content objects.
+ * 
+ * @param dir - The directory to read from.
+ * @param baseDir - The base directory to calculate relative paths for slugs.
+ * @returns Array of content objects containing slug, frontmatter, content, and file path.
+ */
+const readContent = (dir: string, baseDir: string = dir) => {
+  let results: any[] = [];
+  const list = fs.readdirSync(dir);
+  
+  list.forEach(file => {
+    const filePath = path.join(dir, file);
+    const stat = fs.statSync(filePath);
     
-    if (file.endsWith('.md')) {
-      const { data, content: body } = matter(content);
-      return {
-        slug: file.replace('.md', ''),
-        frontmatter: data,
-        content: body,
-        path: path.join(dir, file)
-      };
-    } else {
-      // TODO: Implement frontmatter parsing for AsciiDoc and reStructuredText
-      return {
-        slug: file.replace(/\.(adoc|rst)$/, ''),
-        frontmatter: {}, 
-        content: content,
-        path: path.join(dir, file)
-      };
+    if (stat && stat.isDirectory()) {
+      results = results.concat(readContent(filePath, baseDir));
+    } else if (file.endsWith('.md') || file.endsWith('.adoc') || file.endsWith('.rst')) {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const relativePath = path.relative(baseDir, filePath);
+      
+      // Slug logic: 
+      // 1. If file is named same as parent folder (e.g. hubs/hubs.md), slug is parent folder
+      // 2. If file is named index.md, slug is parent folder
+      // 3. Otherwise, slug is the relative path without extension
+      let slug = relativePath.replace(/\.(md|adoc|rst)$/, '');
+      const parts = slug.split(path.sep);
+      if (parts.length > 1) {
+        const fileName = parts[parts.length - 1];
+        const parentDir = parts[parts.length - 2];
+        if (fileName === parentDir || fileName === 'index') {
+          slug = parts.slice(0, -1).join('/');
+        }
+      }
+      // Ensure forward slashes for slugs
+      slug = slug.replace(/\\/g, '/');
+
+      if (file.endsWith('.md')) {
+        const { data, content: body } = matter(content);
+        if (data && Object.keys(data).length > 0) {
+          results.push({
+            slug,
+            frontmatter: data,
+            content: body,
+            path: filePath
+          });
+        }
+      } else {
+        results.push({
+          slug,
+          frontmatter: {}, 
+          content: content,
+          path: filePath
+        });
+      }
     }
   });
+  
+  return results;
 };
 
+// ============================================================================
 // API Routes
+// Note: All API routes use the .json extension to match the static file 
+// generation output, preventing conflicts between files and directories.
+// ============================================================================
 
-// Get Site Config
-app.get('/api/config', (req, res) => {
+/**
+ * GET /api/config.json
+ * Retrieves the site configuration. Merges user config with defaults.
+ */
+app.get('/api/config.json', (req, res) => {
   try {
     if (fs.existsSync(CONFIG_FILE)) {
       const config = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
@@ -74,8 +116,12 @@ app.get('/api/config', (req, res) => {
   }
 });
 
-// Update Site Config
-app.post('/api/config', (req, res) => {
+/**
+ * POST /api/config.json
+ * Updates the site configuration and saves it to site-config.json.
+ * Requires admin access.
+ */
+app.post('/api/config.json', (req, res) => {
   if (process.env.DISABLE_ADMIN === 'true') {
     return res.status(403).json({ error: 'Admin dashboard is disabled' });
   }
@@ -90,10 +136,13 @@ app.post('/api/config', (req, res) => {
   }
 });
 
-// Get all posts
-app.get('/api/posts', (req, res) => {
+/**
+ * GET /api/posts.json
+ * Retrieves all blog posts, sorted by date in descending order.
+ */
+app.get('/api/posts.json', (req, res) => {
   try {
-    const posts = readContent(POSTS_DIR);
+    const posts = readContent(POSTS_DIR).filter(p => p.frontmatter && (p.frontmatter as any).title);
     // Sort by date desc
     posts.sort((a, b) => {
       const dateA = new Date((a.frontmatter as any).date || 0).getTime();
@@ -107,10 +156,13 @@ app.get('/api/posts', (req, res) => {
   }
 });
 
-// RSS/Atom Feed
+/**
+ * GET /rss.xml
+ * Generates an Atom feed for all blog posts.
+ */
 app.get('/rss.xml', (req, res) => {
   try {
-    const posts = readContent(POSTS_DIR);
+    const posts = readContent(POSTS_DIR).filter(p => p.frontmatter && (p.frontmatter as any).title);
     posts.sort((a, b) => {
       const dateA = new Date((a.frontmatter as any).date || 0).getTime();
       const dateB = new Date((b.frontmatter as any).date || 0).getTime();
@@ -165,12 +217,33 @@ app.get('/rss.xml', (req, res) => {
   }
 });
 
-// Get single post
-app.get('/api/posts/:slug', (req, res) => {
+/**
+ * GET /api/posts/:slug(*).json
+ * Retrieves a single blog post by its slug.
+ * Supports different file structures (e.g., slug.md, slug/slug.md, slug/index.md).
+ */
+app.get('/api/posts/:slug(*).json', (req, res) => {
   try {
     const { slug } = req.params;
-    const filePath = path.join(POSTS_DIR, `${path.basename(slug)}.md`);
-    if (!fs.existsSync(filePath)) {
+    // Try different paths:
+    // 1. slug.md
+    // 2. slug/slug.md
+    // 3. slug/index.md
+    const possiblePaths = [
+      path.join(POSTS_DIR, `${slug}.md`),
+      path.join(POSTS_DIR, slug, `${path.basename(slug)}.md`),
+      path.join(POSTS_DIR, slug, 'index.md')
+    ];
+    
+    let filePath = '';
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        filePath = p;
+        break;
+      }
+    }
+
+    if (!filePath) {
       return res.status(404).json({ error: 'Post not found' });
     }
     const content = fs.readFileSync(filePath, 'utf-8');
@@ -181,8 +254,11 @@ app.get('/api/posts/:slug', (req, res) => {
   }
 });
 
-// Get all pages
-app.get('/api/pages', (req, res) => {
+/**
+ * GET /api/pages.json
+ * Retrieves all standalone pages.
+ */
+app.get('/api/pages.json', (req, res) => {
   try {
     const pages = readContent(PAGES_DIR);
     res.json(pages);
@@ -191,12 +267,32 @@ app.get('/api/pages', (req, res) => {
   }
 });
 
-// Get single page
-app.get('/api/pages/:slug', (req, res) => {
+/**
+ * GET /api/pages/:slug(*).json
+ * Retrieves a single standalone page by its slug.
+ */
+app.get('/api/pages/:slug(*).json', (req, res) => {
   try {
     const { slug } = req.params;
-    const filePath = path.join(PAGES_DIR, `${path.basename(slug)}.md`);
-    if (!fs.existsSync(filePath)) {
+    // Try different paths:
+    // 1. slug.md
+    // 2. slug/slug.md
+    // 3. slug/index.md
+    const possiblePaths = [
+      path.join(PAGES_DIR, `${slug}.md`),
+      path.join(PAGES_DIR, slug, `${path.basename(slug)}.md`),
+      path.join(PAGES_DIR, slug, 'index.md')
+    ];
+    
+    let filePath = '';
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        filePath = p;
+        break;
+      }
+    }
+
+    if (!filePath) {
       return res.status(404).json({ error: 'Page not found' });
     }
     const content = fs.readFileSync(filePath, 'utf-8');
@@ -207,8 +303,12 @@ app.get('/api/pages/:slug', (req, res) => {
   }
 });
 
-// Save post/page (Admin)
-app.post('/api/content', (req, res) => {
+/**
+ * POST /api/content.json
+ * Saves a new or updated post/page. Handles file creation and renaming.
+ * Requires admin access.
+ */
+app.post('/api/content.json', (req, res) => {
   // Check if admin is disabled via env var (simulated config)
   if (process.env.DISABLE_ADMIN === 'true') {
     return res.status(403).json({ error: 'Admin dashboard is disabled' });
@@ -218,17 +318,37 @@ app.post('/api/content', (req, res) => {
     const { type, slug, frontmatter, content, originalSlug } = req.body;
     const dir = type === 'page' ? PAGES_DIR : POSTS_DIR;
     
+    // Helper to find the file path for a slug
+    const findFilePath = (s: string) => {
+      const possiblePaths = [
+        path.join(dir, `${s}.md`),
+        path.join(dir, s, `${path.basename(s)}.md`),
+        path.join(dir, s, 'index.md')
+      ];
+      return possiblePaths.find(p => fs.existsSync(p));
+    };
+
     // If slug changed, delete old file
     if (originalSlug && originalSlug !== slug) {
-      const oldPath = path.join(dir, `${originalSlug}.md`);
-      if (fs.existsSync(oldPath)) {
+      const oldPath = findFilePath(originalSlug);
+      if (oldPath && fs.existsSync(oldPath)) {
         fs.unlinkSync(oldPath);
       }
     }
 
-    const filePath = path.join(dir, `${path.basename(slug)}.md`);
+    // Determine where to save
+    let filePath = findFilePath(slug);
+    if (!filePath) {
+      // If it doesn't exist, default to slug.md at the top level of the dir
+      // unless the slug contains slashes, then we might need to create dirs
+      filePath = path.join(dir, `${slug}.md`);
+      const fileDir = path.dirname(filePath);
+      if (!fs.existsSync(fileDir)) {
+        fs.mkdirSync(fileDir, { recursive: true });
+      }
+    }
+
     const fileContent = matter.stringify(content, frontmatter);
-    
     fs.writeFileSync(filePath, fileContent);
     res.json({ success: true, slug });
   } catch (error) {
@@ -237,8 +357,12 @@ app.post('/api/content', (req, res) => {
   }
 });
 
-// Delete post/page (Admin)
-app.delete('/api/content/:type/:slug', async (req, res) => {
+/**
+ * DELETE /api/content/:type/:slug(*).json
+ * Deletes a specific post or page.
+ * Requires admin access.
+ */
+app.delete('/api/content/:type/:slug(*).json', async (req, res) => {
   if (process.env.DISABLE_ADMIN === 'true') {
     return res.status(403).json({ error: 'Admin dashboard is disabled' });
   }
@@ -248,30 +372,36 @@ app.delete('/api/content/:type/:slug', async (req, res) => {
     console.log(`[DELETE] Request received for type: ${type}, slug: ${slug}`);
     
     const dir = type === 'page' ? PAGES_DIR : POSTS_DIR;
-    const filePath = path.join(dir, `${path.basename(slug)}.md`);
-    console.log(`[DELETE] Attempting to delete file: ${filePath}`);
+    
+    const possiblePaths = [
+      path.join(dir, `${slug}.md`),
+      path.join(dir, slug, `${path.basename(slug)}.md`),
+      path.join(dir, slug, 'index.md')
+    ];
+    
+    const filePath = possiblePaths.find(p => fs.existsSync(p));
 
-    try {
-      await fs.promises.access(filePath);
-      await fs.promises.unlink(filePath);
-      console.log(`[DELETE] Successfully deleted: ${filePath}`);
-      res.json({ success: true });
-    } catch (err: any) {
-      console.error(`[DELETE] Error deleting file: ${err.message}`);
-      if (err.code === 'ENOENT') {
-        res.status(404).json({ error: 'File not found' });
-      } else {
-        throw err;
-      }
+    if (!filePath) {
+      console.log(`[DELETE] File not found for slug: ${slug}`);
+      return res.status(404).json({ error: 'File not found' });
     }
+
+    console.log(`[DELETE] Attempting to delete file: ${filePath}`);
+    await fs.promises.unlink(filePath);
+    console.log(`[DELETE] Successfully deleted: ${filePath}`);
+    res.json({ success: true });
   } catch (error) {
     console.error('Delete error:', error);
     res.status(500).json({ error: 'Failed to delete content' });
   }
 });
 
-// Import external URL
-app.post('/api/import', async (req, res) => {
+/**
+ * POST /api/import.json
+ * Imports content from an external URL, parses the HTML, and converts it to Markdown.
+ * Requires admin access.
+ */
+app.post('/api/import.json', async (req, res) => {
    if (process.env.DISABLE_ADMIN === 'true') {
     return res.status(403).json({ error: 'Admin dashboard is disabled' });
   }

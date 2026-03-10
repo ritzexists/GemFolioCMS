@@ -16,12 +16,20 @@ interface MarkdownRendererProps {
  * Renders markdown content with support for:
  * - MathJax/LaTeX (via remark-math and rehype-katex)
  * - Syntax highlighting (via react-syntax-highlighter)
- * - Custom neobrutalist styling
+ * - Custom neobrutalist styling for various HTML elements
+ * - Relative URL resolution for images and links
  * 
  * @param {string} content - The markdown content to render.
  * @param {string} basePath - Base path for relative URLs.
  */
 export default function MarkdownRenderer({ content, basePath }: MarkdownRendererProps) {
+  /**
+   * Transforms relative URLs to absolute URLs based on the basePath.
+   * This is crucial for rendering images referenced relatively in markdown files.
+   * 
+   * @param uri - The original URI from the markdown content.
+   * @returns The transformed URI.
+   */
   const urlTransform = (uri: string) => {
     if (uri.startsWith('http') || uri.startsWith('/') || !basePath) {
       return uri;

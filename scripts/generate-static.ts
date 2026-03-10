@@ -10,26 +10,59 @@ const POSTS_DIR = path.join(CONTENT_DIR, 'posts');
 const PAGES_DIR = path.join(CONTENT_DIR, 'pages');
 const CONFIG_FILE = path.join(process.cwd(), 'site-config.json');
 
-const readContent = (dir: string) => {
-  if (!fs.existsSync(dir)) return [];
-  const files = fs.readdirSync(dir).filter(file => file.endsWith('.md') || file.endsWith('.adoc') || file.endsWith('.rst'));
-  return files.map(file => {
-    const content = fs.readFileSync(path.join(dir, file), 'utf-8');
-    if (file.endsWith('.md')) {
-      const { data, content: body } = matter(content);
-      return {
-        slug: file.replace('.md', ''),
-        frontmatter: data,
-        content: body
-      };
-    } else {
-      return {
-        slug: file.replace(/\.(adoc|rst)$/, ''),
-        frontmatter: {},
-        content: content
-      };
+const readContent = (dir: string, baseDir: string = dir) => {
+  let results: any[] = [];
+  if (!fs.existsSync(dir)) return results;
+  const list = fs.readdirSync(dir);
+  
+  list.forEach(file => {
+    const filePath = path.join(dir, file);
+    const stat = fs.statSync(filePath);
+    
+    if (stat && stat.isDirectory()) {
+      results = results.concat(readContent(filePath, baseDir));
+    } else if (file.endsWith('.md') || file.endsWith('.adoc') || file.endsWith('.rst')) {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const relativePath = path.relative(baseDir, filePath);
+      
+      // Slug logic: 
+      // 1. If file is named same as parent folder (e.g. hubs/hubs.md), slug is parent folder
+      // 2. If file is named index.md, slug is parent folder
+      // 3. Otherwise, slug is the relative path without extension
+      let slug = relativePath.replace(/\.(md|adoc|rst)$/, '');
+      const parts = slug.split(path.sep);
+      if (parts.length > 1) {
+        const fileName = parts[parts.length - 1];
+        const parentDir = parts[parts.length - 2];
+        if (fileName === parentDir || fileName === 'index') {
+          slug = parts.slice(0, -1).join('/');
+        }
+      }
+      // Ensure forward slashes for slugs
+      slug = slug.replace(/\\/g, '/');
+
+      if (file.endsWith('.md')) {
+        const { data, content: body } = matter(content);
+        if (data && Object.keys(data).length > 0) {
+          results.push({
+            slug,
+            frontmatter: data,
+            content: body,
+            path: filePath
+          });
+        }
+      } else {
+        results.push({
+          slug,
+          frontmatter: {}, 
+          content: content,
+          path: filePath
+        });
+      }
     }
   });
+  
+  return results;
 };
 
 async function generate() {
@@ -57,31 +90,55 @@ async function generate() {
   if (fs.existsSync(CONFIG_FILE)) {
     config = { ...DEFAULT_CONFIG, ...JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8')) };
   }
-  fs.writeFileSync(path.join(apiDir, 'config'), JSON.stringify(config));
+  fs.writeFileSync(path.join(apiDir, 'config.json'), JSON.stringify(config));
 
   // 3. Generate Posts
-  const posts = readContent(POSTS_DIR);
+  const posts = readContent(POSTS_DIR).filter(p => p.frontmatter && (p.frontmatter as any).title);
   posts.sort((a, b) => {
     const dateA = new Date((a.frontmatter as any).date || 0).getTime();
     const dateB = new Date((b.frontmatter as any).date || 0).getTime();
     return dateB - dateA;
   });
-  fs.writeFileSync(path.join(apiDir, 'posts'), JSON.stringify(posts));
+  fs.writeFileSync(path.join(apiDir, 'posts.json'), JSON.stringify(posts));
+
+  // Write individual posts
+  posts.forEach(post => {
+    const postPath = path.join(apiDir, 'posts', `${post.slug}.json`);
+    const postDir = path.dirname(postPath);
+    if (!fs.existsSync(postDir)) fs.mkdirSync(postDir, { recursive: true });
+    fs.writeFileSync(postPath, JSON.stringify(post));
+  });
 
   // 4. Generate Pages
   const pages = readContent(PAGES_DIR);
-  fs.writeFileSync(path.join(apiDir, 'pages'), JSON.stringify(pages));
+  fs.writeFileSync(path.join(apiDir, 'pages.json'), JSON.stringify(pages));
+
+  // Write individual pages
+  pages.forEach(page => {
+    const pagePath = path.join(apiDir, 'pages', `${page.slug}.json`);
+    const pageDir = path.dirname(pagePath);
+    if (!fs.existsSync(pageDir)) fs.mkdirSync(pageDir, { recursive: true });
+    fs.writeFileSync(pagePath, JSON.stringify(page));
+  });
 
   // 5. Generate RSS
   const siteUrl = 'https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app'; // Fallback
   const feed = new Feed({
-    title: config.siteName,
-    description: config.heroDescription,
+    title: config.siteName || 'Blog Posts',
+    description: config.heroDescription || 'Latest posts from our blog',
     id: siteUrl,
     link: siteUrl,
     language: 'en',
+    favicon: `${siteUrl}/favicon.ico`,
     copyright: `All rights reserved ${new Date().getFullYear()}`,
-    author: { name: 'GemBrutalCMS' },
+    feedLinks: {
+      rss: `${siteUrl}/rss.xml`,
+      atom: `${siteUrl}/atom.xml`,
+    },
+    author: {
+      name: 'GemBrutalCMS',
+      link: siteUrl,
+    },
   });
 
   posts.forEach(post => {
@@ -90,9 +147,16 @@ async function generate() {
       title: fm.title || post.slug,
       id: `${siteUrl}/blog/${post.slug}`,
       link: `${siteUrl}/blog/${post.slug}`,
-      description: fm.description || post.content.substring(0, 200),
+      description: fm.description || post.content.substring(0, 200) + '...',
       content: post.content,
-      date: new Date(fm.date || new Date()),
+      author: [
+        {
+          name: 'GemBrutalCMS',
+          link: siteUrl,
+        },
+      ],
+      date: new Date(fm.date || Date.now()),
+      image: fm.image,
     });
   });
   fs.writeFileSync(path.join(DIST_DIR, 'rss.xml'), feed.atom1());

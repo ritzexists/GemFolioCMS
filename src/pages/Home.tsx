@@ -23,7 +23,7 @@ export default function Home() {
   const { config } = useSiteConfig();
 
   useEffect(() => {
-    fetch('/api/posts')
+    fetch('/api/posts.json')
       .then(res => res.json())
       .then(data => {
         setPosts(data);
@@ -69,11 +69,9 @@ export default function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {posts.slice(0, 3).map((post) => (
-            <Link 
-              to={`/blog/${post.slug}`} 
+            <div 
               key={post.slug} 
-              className="group block h-full"
-              draggable={false}
+              className="h-full"
             >
               <DraggableCard 
                 className="neobrutal-box h-full p-6 flex flex-col justify-between hover:shadow-[8px_8px_0px_0px_var(--color-neon-green)] hover:border-neon-green transition-all cursor-grab active:cursor-grabbing"
@@ -81,9 +79,11 @@ export default function Home() {
               >
                 <div>
                   <div className="text-xs text-white/50 mb-2 font-mono">{post.frontmatter.date}</div>
-                  <h3 className="text-xl text-white group-hover:text-neon-green mb-3 line-clamp-2 card-action inline-block">
-                    {post.frontmatter.title}
-                  </h3>
+                  <Link to={`/blog/${post.slug}`} className="group/title inline-block mb-3">
+                    <h3 className="text-xl text-white group-hover/title:text-neon-green line-clamp-2 card-action transition-colors">
+                      {post.frontmatter.title}
+                    </h3>
+                  </Link>
                   <p className="text-sm text-white/70 line-clamp-3 mb-4">
                     {post.frontmatter.description}
                   </p>
@@ -91,13 +91,17 @@ export default function Home() {
                 
                 <div className="flex gap-2 flex-wrap">
                   {post.frontmatter.tags?.map(tag => (
-                    <span key={tag} className="text-xs border border-white/30 px-2 py-0.5 rounded-full">
+                    <Link 
+                      key={tag} 
+                      to={`/blog?tag=${tag}`}
+                      className="text-xs border border-white/30 px-2 py-0.5 rounded-full hover:bg-neon-pink hover:text-void hover:border-neon-pink transition-colors card-action"
+                    >
                       #{tag}
-                    </span>
+                    </Link>
                   ))}
                 </div>
               </DraggableCard>
-            </Link>
+            </div>
           ))}
         </div>
       </section>

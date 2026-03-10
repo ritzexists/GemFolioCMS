@@ -42,12 +42,12 @@ export default function App() {
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/blog" element={<Blog />} />
-                  <Route path="/blog/:slug" element={<Post />} />
+                  <Route path="/blog/*" element={<Post />} />
                   <Route path="/profile" element={<Profile />} />
                   {import.meta.env.VITE_DISABLE_ADMIN !== 'true' && (
                     <Route path="/admin" element={<Admin />} />
                   )}
-                  <Route path="/p/:slug" element={<Page />} />
+                  <Route path="/p/*" element={<Page />} />
                 </Routes>
               </Layout>
             </AppContent>
