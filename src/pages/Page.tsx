@@ -53,6 +53,7 @@ export default function Page() {
               >
                 <DraggableCard 
                   className="neobrutal-box p-0 overflow-hidden relative flex flex-col lg:flex-row h-full cursor-grab active:cursor-grabbing"
+                  hoverEffect="invert"
                 >
                   {/* Image Section - 2 parts (40%) */}
                   <div className="w-full lg:w-2/5 h-48 lg:h-auto border-b-2 lg:border-b-0 lg:border-r-2 border-neon-pink relative overflow-hidden shrink-0">
@@ -91,6 +92,7 @@ export default function Page() {
               >
                 <DraggableCard 
                   className="neobrutal-box p-4 flex flex-col items-center text-center hover:bg-white/5 transition-colors h-full cursor-grab active:cursor-grabbing"
+                  hoverEffect="skew"
                 >
                   <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-neon-pink mb-4 group-hover:rotate-12 transition-transform card-action">
                     <img src={item.image} alt={item.title} className="w-full h-full object-cover" draggable={false} />

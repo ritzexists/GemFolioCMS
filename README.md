@@ -1,4 +1,4 @@
-# Neobrutalism Portfolio & Blog
+# Neobrutalism Portfolio & Blog Template
 
 A modern, high-performance portfolio and blog template built with React, Vite, and Tailwind CSS. It features a distinct "neobrutalist" aesthetic, a built-in command-line terminal for navigation, and a comprehensive admin dashboard.
 
@@ -13,6 +13,7 @@ A modern, high-performance portfolio and blog template built with React, Vite, a
 - **Dynamic Content**: Create custom pages with flexible layouts (grid, list, etc.), including a dedicated Presentations page for conference talks.
 - **Theme System**: Toggle between different visual themes via the terminal.
 - **Import Tool**: Import content from external URLs (Markdown, HTML) to quickly populate your blog.
+- **SEO Features**: Built-in SEO support using `react-helmet-async` for dynamic meta tags and titles.
 
 ## Tech Stack
 
@@ -22,6 +23,7 @@ A modern, high-performance portfolio and blog template built with React, Vite, a
 - **Icons**: Lucide React
 - **Markdown**: React Markdown, React Syntax Highlighter
 - **Forms**: React Hook Form
+- **SEO**: React Helmet Async
 
 ## Getting Started
 
@@ -34,8 +36,8 @@ A modern, high-performance portfolio and blog template built with React, Vite, a
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/neobrutal-portfolio.git
-   cd neobrutal-portfolio
+   git clone https://github.com/yourusername/neobrutalism-template.git
+   cd neobrutalism-template
    ```
 
 2. Install dependencies:
@@ -49,6 +51,21 @@ A modern, high-performance portfolio and blog template built with React, Vite, a
    ```
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## SEO Configuration
+
+This project includes a reusable `SEO` component located at `src/components/SEO.tsx`. It uses `react-helmet-async` to manage document head tags dynamically.
+
+To use it in a page:
+
+```tsx
+import SEO from '@/components/SEO';
+
+// Inside your component
+<SEO title="Page Title" description="Page description" canonical="https://example.com/page" />
+```
+
+The `SEO` component automatically handles the site title suffix and provides default meta descriptions if none are provided.
 
 ## Project Structure
 

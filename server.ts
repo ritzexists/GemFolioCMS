@@ -5,6 +5,7 @@ import path from 'path';
 import matter from 'gray-matter';
 import TurndownService from 'turndown';
 import * as cheerio from 'cheerio';
+import RSS from 'rss';
 
 const app = express();
 const PORT = 3000;
@@ -106,6 +107,44 @@ app.get('/api/posts', (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to fetch posts' });
+  }
+});
+
+// RSS Feed
+app.get('/rss.xml', (req, res) => {
+  try {
+    const posts = readContent(POSTS_DIR);
+    posts.sort((a, b) => {
+      const dateA = new Date((a.frontmatter as any).date || 0).getTime();
+      const dateB = new Date((b.frontmatter as any).date || 0).getTime();
+      return dateB - dateA;
+    });
+
+    const feed = new RSS({
+      title: 'Blog Posts',
+      description: 'Latest posts from our blog',
+      feed_url: `${req.protocol}://${req.get('host')}/rss.xml`,
+      site_url: `${req.protocol}://${req.get('host')}`,
+    });
+
+    posts.forEach(post => {
+      const frontmatter = post.frontmatter as any;
+      feed.item({
+        title: frontmatter.title || post.slug,
+        description: frontmatter.description || post.content.substring(0, 200) + '...',
+        url: `${req.protocol}://${req.get('host')}/blog/${post.slug}`,
+        date: frontmatter.date,
+        custom_elements: [
+          { 'image': frontmatter.image || '' }
+        ]
+      });
+    });
+
+    res.set('Content-Type', 'application/xml');
+    res.send(feed.xml());
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to generate RSS feed' });
   }
 });
 

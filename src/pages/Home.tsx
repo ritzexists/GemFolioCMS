@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { useSiteConfig } from '@/context/SiteConfigContext';
 import DraggableCard from '@/components/DraggableCard';
 import Calculator from '@/components/Calculator';
+import SEO from '@/components/SEO';
 
 interface Post {
   slug: string;
@@ -31,12 +32,14 @@ export default function Home() {
 
   return (
     <div className="space-y-12">
+      <SEO title="Home" description={config.heroDescription} />
       {/* Hero Section */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left Column: Intro & Search */}
         <div className="space-y-8">
           <DraggableCard 
             className="neobrutal-box p-8 bg-neon-green/10 cursor-grab active:cursor-grabbing"
+            hoverEffect="rotate"
           >
             <h1 className="text-4xl md:text-6xl font-black text-neon-pink mb-4 leading-none whitespace-pre-line">
               {config.heroTitle}
@@ -74,6 +77,7 @@ export default function Home() {
             >
               <DraggableCard 
                 className="neobrutal-box h-full p-6 flex flex-col justify-between hover:shadow-[8px_8px_0px_0px_var(--color-neon-green)] hover:border-neon-green transition-all cursor-grab active:cursor-grabbing"
+                hoverEffect="rotate"
               >
                 <div>
                   <div className="text-xs text-white/50 mb-2 font-mono">{post.frontmatter.date}</div>

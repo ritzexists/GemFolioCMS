@@ -10,6 +10,7 @@ interface DraggableCardProps {
   minHeight?: number;
   onClick?: (e: React.MouseEvent) => void;
   dragConstraints?: React.RefObject<Element>;
+  hoverEffect?: 'default' | 'invert' | 'rotate' | 'skew';
 }
 
 export default function DraggableCard({ 
@@ -20,7 +21,8 @@ export default function DraggableCard({
   minWidth = 200,
   minHeight = 150,
   onClick,
-  dragConstraints
+  dragConstraints,
+  hoverEffect = 'default'
 }: DraggableCardProps) {
   const [isGlitching, setIsGlitching] = useState(false);
   const [size, setSize] = useState<{width: string | number, height: string | number}>({ width: initialWidth, height: initialHeight });
@@ -28,6 +30,13 @@ export default function DraggableCard({
   const containerRef = useRef<HTMLDivElement>(null);
   const dragControls = useDragControls();
   const startPos = useRef({ x: 0, y: 0 });
+
+  const hoverClasses = {
+    default: 'hover:scale-[1.01] hover:border-neon-pink',
+    invert: 'hover:invert hover:rotate-1',
+    rotate: 'hover:rotate-3',
+    skew: 'hover:skew-x-2 hover:skew-y-2 hover:scale-105'
+  };
 
   useEffect(() => {
     const handleNativeDragStart = (e: DragEvent) => {
@@ -135,7 +144,7 @@ export default function DraggableCard({
       onDragStart={handleDragStart}
       onPointerDown={handlePointerDown}
       whileDrag={{ scale: 1.02, zIndex: 50, cursor: 'grabbing' }}
-      className={`relative group touch-none ${className} ${isGlitching ? 'glitch-effect' : ''}`}
+      className={`relative group touch-none ${className} ${isGlitching ? 'glitch-effect' : ''} ${hoverClasses[hoverEffect]}`}
       style={{ width: size.width, height: size.height }}
       onClick={handleClick}
     >
