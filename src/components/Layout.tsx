@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Terminal, BookOpen, User, Settings, Home, Star, RectangleGoggles, HardHat, Wrench, Mic, Rss, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -8,6 +8,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { config } = useSiteConfig();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const [intrinsicWidth, setIntrinsicWidth] = useState(0);
+  
+  const headerRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLAnchorElement>(null);
+  const statusRef = useRef<HTMLDivElement>(null);
 
   const now = new Date("2026-03-09T15:48:34-07:00");
   const showBanner = config.bannerMessage && 
@@ -21,6 +28,67 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     </div>
   );
 
+  // Measure intrinsic width of the navigation menu
+  useEffect(() => {
+    if (navRef.current && intrinsicWidth === 0) {
+      const width = navRef.current.scrollWidth;
+      if (width > 0) {
+        setIntrinsicWidth(width);
+      }
+    }
+  }, [intrinsicWidth]);
+
+  // Dynamic overflow detection
+  useEffect(() => {
+    if (!headerRef.current) return;
+
+    const check = () => {
+      if (headerRef.current && intrinsicWidth > 0) {
+        const headerWidth = headerRef.current.clientWidth;
+        const logoWidth = logoRef.current?.offsetWidth || 0;
+        
+        const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+        const isWide = window.innerWidth >= 1152;
+        const isTouch = window.matchMedia('(pointer: coarse)').matches;
+        
+        // Heuristic for "full screen" - on mobile/tablet, the viewport width matches the screen dimensions
+        const isProbablyFullScreen = Math.abs(window.innerWidth - window.screen.width) < 20 || 
+                                     Math.abs(window.innerWidth - window.screen.height) < 20;
+
+        // Status is only shown if wide AND (not landscape OR not touch)
+        // This keeps it hidden on landscape mobile/tablet as requested
+        const canShowStatus = isWide && (!isLandscape || !isTouch);
+        const statusWidth = canShowStatus ? 160 : 0;
+        
+        const availableSpace = headerWidth - logoWidth - statusWidth - 40;
+        const overflow = availableSpace < intrinsicWidth;
+        
+        let shouldBeHamburger = false;
+        
+        if (isLandscape && isProbablyFullScreen) {
+          // "always appears on full screen landscape tablet and mobile layouts"
+          shouldBeHamburger = false;
+        } else {
+          // Standard logic for desktop resizing and multitasking
+          shouldBeHamburger = overflow || (!isLandscape && !isWide);
+        }
+        
+        setIsOverflowing(shouldBeHamburger);
+      }
+    };
+
+    const observer = new ResizeObserver(check);
+    observer.observe(headerRef.current);
+    
+    window.addEventListener('orientationchange', check);
+    check();
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('orientationchange', check);
+    };
+  }, [intrinsicWidth]);
+
   const NavItem = ({ to, icon: Icon, label, onClick }: { to: string; icon: any; label: string; onClick?: () => void }) => {
     const isActive = location.pathname === to;
     return (
@@ -28,12 +96,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         to={to}
         onClick={onClick}
         className={cn(
-          "flex items-center gap-2 px-4 py-2 border-r-2 border-b-2 border-neon-pink hover:bg-neon-pink hover:text-void transition-colors",
+          "flex items-center gap-2 px-4 py-2 border-r-2 border-b-2 border-neon-pink hover:bg-neon-pink hover:text-void transition-colors shrink-0",
           isActive && "bg-neon-pink text-void"
         )}
       >
         <Icon size={18} />
-        <span className="uppercase font-bold text-sm">{label}</span>
+        <span className="uppercase font-bold text-sm whitespace-nowrap">{label}</span>
       </Link>
     );
   };
@@ -63,14 +131,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {config.bannerMessage}
           </div>
         )}
-        <div className="flex justify-between items-stretch h-16 md:h-20">
-          <Link to="/" className="flex items-center px-4 md:px-6 border-r-4 border-neon-pink bg-neon-green text-void hover:bg-white transition-colors">
+        <div ref={headerRef} className="flex justify-between items-stretch h-16 md:h-20">
+          <Link 
+            ref={logoRef}
+            to="/" 
+            className="flex items-center px-4 md:px-6 border-r-4 border-neon-pink bg-neon-green text-void hover:bg-white transition-colors"
+          >
             <Terminal size={24} className="mr-2 shrink-0" />
             <span className="font-black text-lg md:text-xl tracking-tighter uppercase truncate max-w-[150px] md:max-w-none">{config.siteName}</span>
           </Link>
           
           {/* Desktop Navigation */}
-          <nav className="hidden min-[1152px]:flex flex-1 overflow-x-auto landscape:flex">
+          <nav 
+            ref={navRef}
+            className={cn(
+              "flex-1 flex overflow-x-auto transition-opacity duration-200",
+              isOverflowing ? "opacity-0 pointer-events-none absolute invisible" : "opacity-100 relative visible"
+            )}
+          >
             <NavItem to="/" icon={Home} label="Home" />
             <NavItem to="/blog" icon={BookOpen} label="Blog" />
             <NavItem to="/p/recs" icon={Star} label="Recs" />
@@ -84,20 +162,29 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {/* Mobile Menu Toggle */}
           <button 
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="flex min-[1152px]:hidden items-center px-6 border-l-2 border-neon-pink text-neon-pink hover:bg-neon-pink hover:text-void transition-colors ml-auto landscape:hidden"
+            className={cn(
+              "items-center px-6 border-l-2 border-neon-pink text-neon-pink hover:bg-neon-pink hover:text-void transition-colors ml-auto",
+              isOverflowing ? "flex" : "hidden"
+            )}
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
           
-          <div className="hidden min-[1152px]:flex items-center px-6 border-l-2 border-neon-pink">
+          <div 
+            ref={statusRef}
+            className={cn(
+              "hidden items-center px-6 border-l-2 border-neon-pink",
+              !isOverflowing && "min-[1152px]:flex"
+            )}
+          >
             <div className="w-3 h-3 bg-neon-green rounded-full mr-2 animate-pulse" />
             <span className="text-xs uppercase text-neon-green">System Online</span>
           </div>
         </div>
 
         {/* Mobile Navigation Overlay */}
-        {isMenuOpen && (
-          <div className="fixed inset-0 top-auto bottom-0 h-[calc(100vh-64px)] md:h-[calc(100vh-80px)] bg-void z-40 flex flex-col overflow-y-auto border-t-4 border-neon-pink animate-in slide-in-from-bottom duration-300 min-[1152px]:hidden landscape:hidden">
+        {isMenuOpen && isOverflowing && (
+          <div className="fixed inset-0 top-auto bottom-0 h-[calc(100vh-64px)] md:h-[calc(100vh-80px)] bg-void z-40 flex flex-col overflow-y-auto border-t-4 border-neon-pink animate-in slide-in-from-bottom duration-300">
             <div className="flex flex-col">
               <MobileNavItem to="/" icon={Home} label="Home" onClick={() => setIsMenuOpen(false)} />
               <MobileNavItem to="/blog" icon={BookOpen} label="Blog" onClick={() => setIsMenuOpen(false)} />
