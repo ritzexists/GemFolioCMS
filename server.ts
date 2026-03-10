@@ -5,7 +5,7 @@ import path from 'path';
 import matter from 'gray-matter';
 import TurndownService from 'turndown';
 import * as cheerio from 'cheerio';
-import RSS from 'rss';
+import { Feed } from 'feed';
 
 const app = express();
 const PORT = 3000;
@@ -110,7 +110,7 @@ app.get('/api/posts', (req, res) => {
   }
 });
 
-// RSS Feed
+// RSS/Atom Feed
 app.get('/rss.xml', (req, res) => {
   try {
     const posts = readContent(POSTS_DIR);
@@ -120,31 +120,51 @@ app.get('/rss.xml', (req, res) => {
       return dateB - dateA;
     });
 
-    const feed = new RSS({
+    const siteUrl = `${req.protocol}://${req.get('host')}`;
+    
+    const feed = new Feed({
       title: 'Blog Posts',
       description: 'Latest posts from our blog',
-      feed_url: `${req.protocol}://${req.get('host')}/rss.xml`,
-      site_url: `${req.protocol}://${req.get('host')}`,
+      id: siteUrl,
+      link: siteUrl,
+      language: 'en',
+      favicon: `${siteUrl}/favicon.ico`,
+      copyright: `All rights reserved ${new Date().getFullYear()}`,
+      feedLinks: {
+        rss: `${siteUrl}/rss.xml`,
+        atom: `${siteUrl}/atom.xml`,
+      },
+      author: {
+        name: 'GemBrutalCMS',
+        link: siteUrl,
+      },
     });
 
     posts.forEach(post => {
       const frontmatter = post.frontmatter as any;
-      feed.item({
+      feed.addItem({
         title: frontmatter.title || post.slug,
+        id: `${siteUrl}/blog/${post.slug}`,
+        link: `${siteUrl}/blog/${post.slug}`,
         description: frontmatter.description || post.content.substring(0, 200) + '...',
-        url: `${req.protocol}://${req.get('host')}/blog/${post.slug}`,
-        date: frontmatter.date,
-        custom_elements: [
-          { 'image': frontmatter.image || '' }
-        ]
+        content: post.content,
+        author: [
+          {
+            name: 'GemBrutalCMS',
+            link: siteUrl,
+          },
+        ],
+        date: new Date(frontmatter.date || Date.now()),
+        image: frontmatter.image,
       });
     });
 
-    res.set('Content-Type', 'application/xml');
-    res.send(feed.xml());
+    // We serve Atom by default for better compatibility as requested
+    res.set('Content-Type', 'application/atom+xml');
+    res.send(feed.atom1());
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to generate RSS feed' });
+    res.status(500).json({ error: 'Failed to generate feed' });
   }
 });
 

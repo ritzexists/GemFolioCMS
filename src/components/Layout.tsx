@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Terminal, BookOpen, User, Settings, Home, Star, RectangleGoggles, HardHat, Wrench, Mic } from 'lucide-react';
+import { Terminal, BookOpen, User, Settings, Home, Star, RectangleGoggles, HardHat, Wrench, Mic, Rss } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSiteConfig } from '@/context/SiteConfigContext';
 
@@ -74,8 +74,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {!location.pathname.startsWith('/admin') && (
         <footer className="border-t-4 border-neon-pink p-6 text-center text-xs uppercase text-white/50">
-          <p>{config.footerText}</p>
-          <p className="mt-2">{config.copyright}</p>
+          <div className="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-4">
+            <p>{config.footerText}</p>
+            <span className="hidden md:inline text-white/20">|</span>
+            <a 
+              href="/rss.xml" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:text-neon-pink transition-colors flex items-center gap-1"
+              title="RSS Feed"
+            >
+              <Rss size={14} />
+              <span>RSS FEED</span>
+            </a>
+          </div>
         </footer>
       )}
     </div>

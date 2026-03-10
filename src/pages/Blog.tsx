@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { X, Search } from 'lucide-react';
+import { X, Search, Rss } from 'lucide-react';
 
 interface Post {
   slug: string;
@@ -94,9 +94,21 @@ export default function Blog() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="border-b-4 border-neon-pink pb-8">
-        <h1 className="text-4xl md:text-6xl text-neon-green mb-6">
-          ARCHIVES
-        </h1>
+        <div className="flex justify-between items-end mb-6">
+          <h1 className="text-4xl md:text-6xl text-neon-green">
+            ARCHIVES
+          </h1>
+          <a 
+            href="/rss.xml" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 border-2 border-neon-pink text-neon-pink hover:bg-neon-pink hover:text-void transition-all font-bold uppercase text-sm"
+          >
+            <Rss size={18} />
+            <span className="hidden sm:inline">Subscribe via RSS</span>
+            <span className="sm:hidden">RSS</span>
+          </a>
+        </div>
 
         {/* Search and Tags Section */}
         <div className="space-y-6">
