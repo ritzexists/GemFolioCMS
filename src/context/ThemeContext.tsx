@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Theme = 'nonbinary' | 'demisexual' | 'pansexual' | 'transgender' | 'lesbian' | 'hddvd' | 'bluray' | 'brat';
+type Theme = 'nonbinary' | 'demi' | 'pan' | 'transgender' | 'lesbian' | 'hddvd' | 'bluray' | 'brat';
 
 interface ThemeContextType {
   theme: Theme;
@@ -17,13 +17,13 @@ const themes: Record<Theme, { primary: string; secondary: string; bg: string; pa
     bg: '#2C2C2C', // Dark Gray
     palette: ['#FCF434', '#FFFFFF', '#9C59D1', '#2C2C2C']
   },
-  demisexual: {
+  demi: {
     primary: '#D3D3D3', // Silver/Gray
     secondary: '#6E0070', // Purple
     bg: '#000000', // Black
     palette: ['#000000', '#FFFFFF', '#6E0070', '#D3D3D3']
   },
-  pansexual: {
+  pan: {
     primary: '#FF218C', // Pink
     secondary: '#21B1FF', // Blue
     bg: '#121212', // Dark

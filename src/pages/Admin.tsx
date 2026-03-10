@@ -62,6 +62,7 @@ export default function Admin() {
     if (contentType === 'settings') {
       setValueSettings('siteName', config.siteName);
       setValueSettings('footerText', config.footerText);
+      setValueSettings('copyright', config.copyright);
       setValueSettings('heroTitle', config.heroTitle);
       setValueSettings('heroDescription', config.heroDescription);
       setValueSettings('bannerMessage', config.bannerMessage);
@@ -414,6 +415,12 @@ export default function Admin() {
                   <label className="text-sm font-bold text-neon-pink">Footer Text</label>
                   <input {...registerSettings('footerText')} className="neobrutal-input w-full" />
                   <p className="text-xs text-white/50">Displayed at the bottom of every page.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-neon-pink">Copyright</label>
+                  <input {...registerSettings('copyright')} className="neobrutal-input w-full" />
+                  <p className="text-xs text-white/50">Displayed in the footer.</p>
                 </div>
 
                 <div className="space-y-2">

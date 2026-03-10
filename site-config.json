@@ -1,6 +1,7 @@
 {
   "siteName": "GemBrutalCMS",
-  "footerText": "MIT COPYRIGHT 2026",
+  "footerText": "Constructed in the void",
+  "copyright": "MIT COPYRIGHT 2026",
   "heroTitle": "Soft Shadows are Optional",
   "heroDescription": "A static portfolio generator for the end of the world. Flat-file based, brutalist, and unapologetically loud. Written with Gemini.",
   "bannerMessage": "",

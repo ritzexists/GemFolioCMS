@@ -75,6 +75,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {!location.pathname.startsWith('/admin') && (
         <footer className="border-t-4 border-neon-pink p-6 text-center text-xs uppercase text-white/50">
           <p>{config.footerText}</p>
+          <p className="mt-2">{config.copyright}</p>
         </footer>
       )}
     </div>
