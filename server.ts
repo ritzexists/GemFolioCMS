@@ -7,8 +7,12 @@ import * as cheerio from 'cheerio';
 import { Feed } from 'feed';
 import { DEFAULT_CONFIG } from './src/constants';
 import { parseContent, turndownService } from './src/utils/contentParser';
+import { WebSocketServer } from 'ws';
+import { Client } from 'ssh2';
+import http from 'http';
 
 const app = express();
+const server = http.createServer(app);
 const PORT = 3000;
 
 // Middleware to parse JSON
@@ -519,6 +523,86 @@ app.post('/api/import.json', async (req, res) => {
 });
 
 
+// ============================================================================
+// SSH WebSocket Handler
+// ============================================================================
+const wss = new WebSocketServer({ noServer: true });
+
+wss.on('connection', (ws) => {
+  let sshClient: Client | null = null;
+  let shellStream: any = null;
+
+  ws.on('message', (data) => {
+    try {
+      const message = JSON.parse(data.toString());
+
+      if (message.type === 'ssh-connect') {
+        const { host, port, username, password, privateKey } = message.data;
+        
+        sshClient = new Client();
+        sshClient.on('ready', () => {
+          ws.send(JSON.stringify({ type: 'ssh-status', data: 'CONNECTED' }));
+          
+          sshClient?.shell((err, stream) => {
+            if (err) {
+              ws.send(JSON.stringify({ type: 'ssh-error', data: err.message }));
+              return;
+            }
+            shellStream = stream;
+            
+            stream.on('data', (chunk: Buffer) => {
+              ws.send(JSON.stringify({ type: 'ssh-data', data: chunk.toString('utf-8') }));
+            });
+            
+            stream.on('close', () => {
+              ws.send(JSON.stringify({ type: 'ssh-status', data: 'DISCONNECTED' }));
+              sshClient?.end();
+            });
+          });
+        });
+
+        sshClient.on('error', (err) => {
+          ws.send(JSON.stringify({ type: 'ssh-error', data: err.message }));
+        });
+
+        sshClient.connect({
+          host,
+          port: port || 22,
+          username,
+          password,
+          privateKey,
+        });
+      } else if (message.type === 'ssh-input') {
+        if (shellStream) {
+          shellStream.write(message.data);
+        }
+      } else if (message.type === 'ssh-resize') {
+        if (shellStream) {
+          shellStream.setWindow(message.data.rows, message.data.cols, 0, 0);
+        }
+      }
+    } catch (e) {
+      console.error('SSH WebSocket error:', e);
+    }
+  });
+
+  ws.on('close', () => {
+    if (sshClient) {
+      sshClient.end();
+    }
+  });
+});
+
+server.on('upgrade', (request, socket, head) => {
+  const pathname = new URL(request.url!, `http://${request.headers.host}`).pathname;
+
+  if (pathname === '/ssh') {
+    wss.handleUpgrade(request, socket, head, (ws) => {
+      wss.emit('connection', ws, request);
+    });
+  }
+});
+
 // Vite middleware
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
@@ -527,9 +611,15 @@ async function startServer() {
       appType: 'spa',
     });
     app.use(vite.middlewares);
+  } else {
+    const distPath = path.join(process.cwd(), 'dist');
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
+  server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }

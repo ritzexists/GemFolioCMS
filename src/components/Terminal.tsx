@@ -5,6 +5,7 @@ import { useTheme, themes } from '@/context/ThemeContext';
 import { logger } from '@/lib/logger';
 import DraggableCard from './DraggableCard';
 import SnakeGame from './SnakeGame';
+import SSHClient from './SSHClient';
 import { GoogleGenAI } from "@google/genai";
 
 interface TerminalProps {
@@ -30,7 +31,7 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
   const [input, setInput] = useState("");
   const [posts, setPosts] = useState<any[]>([]);
   const [tags, setTags] = useState<string[]>([]);
-  const [activeApp, setActiveApp] = useState<'snake' | 'win96' | 'win98' | 'win93' | 'emshell' | 'doom' | 'linux' | 'linux-gui' | null>(null);
+  const [activeApp, setActiveApp] = useState<'snake' | 'win96' | 'win98' | 'win93' | 'emshell' | 'doom' | 'linux' | 'linux-gui' | 'ssh' | null>(null);
   
   // Refs for accessing latest state in closures (event handlers/timeouts)
   const postsRef = useRef<any[]>([]);
@@ -94,6 +95,7 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
           "  emshell     - Emscripten Shell",
           "  linux       - Linux Shell (WebVM)",
           "  linux-gui   - Linux GUI (Alpine)",
+          "  ssh         - SSH Client",
           "  doom        - Play DOOM",
           "  snake       - Play Snake",
           "  calc        - Open Calculator",
@@ -238,6 +240,11 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
       case 'linux-gui':
         setActiveApp('linux-gui');
         newLines.push("BOOTING LINUX GUI (ALPINE)...");
+        break;
+
+      case 'ssh':
+        setActiveApp('ssh');
+        newLines.push("LAUNCHING SSH CLIENT...");
         break;
 
       case 'snake':
@@ -560,6 +567,7 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
            activeApp === 'win98' ? 'WINDOWS 98 // REDMOND' :
            activeApp === 'linux' ? 'LINUX // WEBVM' :
            activeApp === 'linux-gui' ? 'LINUX // GUI' :
+           activeApp === 'ssh' ? 'SSH CLIENT // WEBSSH' :
            activeApp === 'doom' ? 'DOOM // ID SOFTWARE' :
            `TERMINAL_V1.1 // ${theme.toUpperCase()}`}
         </span>
@@ -648,6 +656,8 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
               title="DOOM"
               allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media; cross-origin-isolated"
             />
+          ) : activeApp === 'ssh' ? (
+            <SSHClient onExit={() => setActiveApp(null)} />
           ) : null}
         </div>
       ) : (
