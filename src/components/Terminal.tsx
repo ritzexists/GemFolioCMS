@@ -36,6 +36,7 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
   const postsRef = useRef<any[]>([]);
   const tagsRef = useRef<string[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const doomRef = useRef<HTMLIFrameElement>(null);
   const linuxRef = useRef<HTMLIFrameElement>(null);
   
@@ -295,15 +296,15 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
         break;
 
       case 'ls':
-        newLines.push(
-          "PAGES:",
+        const pages = [
           "  /home",
           "  /blog",
           "  /profile",
-          "  /admin",
+          ...(import.meta.env.VITE_DISABLE_ADMIN === 'false' || (!import.meta.env.PROD && import.meta.env.VITE_DISABLE_ADMIN !== 'true') ? ["  /admin"] : []),
           "  /p/portfolio",
           "  /p/hubs"
-        );
+        ];
+        newLines.push("PAGES:", ...pages);
         break;
 
       case 'cd':
@@ -317,7 +318,7 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
             'home': '/',
             'blog': '/blog',
             'profile': '/profile',
-            'admin': '/admin',
+            ...(import.meta.env.VITE_DISABLE_ADMIN === 'false' || (!import.meta.env.PROD && import.meta.env.VITE_DISABLE_ADMIN !== 'true') ? { 'admin': '/admin' } : {}),
             'works': '/p/portfolio',
             'portfolio': '/p/portfolio',
             'hubs': '/p/hubs'
@@ -548,8 +549,9 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
 
   return (
     <DraggableCard 
-      className="neobrutal-box w-full flex flex-col p-4 font-mono text-sm md:text-base relative overflow-hidden transition-colors duration-300 cursor-grab active:cursor-grabbing"
+      className="neobrutal-box glass-terminal w-full flex flex-col p-4 font-mono text-sm md:text-base relative overflow-hidden transition-colors duration-300 cursor-grab active:cursor-grabbing"
       initialHeight={400}
+      onClick={() => inputRef.current?.focus()}
     >
       <div className="absolute top-0 left-0 right-0 h-6 bg-neon-pink flex items-center px-2 justify-between transition-colors duration-300 z-10 pointer-events-none">
         <span className="text-void font-bold text-xs">
@@ -600,35 +602,35 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
               src="https://windows96.net/"
               className="w-full h-full border-none" 
               title="Windows 96"
-              allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media"
+              allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media; cross-origin-isolated"
             />
           ) : activeApp === 'win98' ? (
             <iframe 
               src="https://98.js.org/"
               className="w-full h-full border-none" 
               title="Windows 98"
-              allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media"
+              allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media; cross-origin-isolated"
             />
           ) : activeApp === 'win93' ? (
             <iframe 
               src="https://www.windows93.net/"
               className="w-full h-full border-none" 
               title="Windows 93"
-              allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media"
+              allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media; cross-origin-isolated"
             />
           ) : activeApp === 'emshell' ? (
             <iframe 
               src="https://tbfleming.github.io/em-shell/"
               className="w-full h-full border-none" 
               title="Emscripten Shell"
-              allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media"
+              allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media; cross-origin-isolated"
             />
           ) : activeApp === 'linux' ? (
             <iframe 
               src="https://webvm.io/"
               className="w-full h-full border-none" 
               title="linux"
-              allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media"
+              allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media; cross-origin-isolated"
             />
           ) : activeApp === 'linux-gui' ? (
             <iframe 
@@ -636,7 +638,7 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
               src="https://webvm.io/alpine.html"
               className="w-full h-full border-none" 
               title="linux-gui"
-              allow="cross-origin-isolated autoplay fullscreen microphone camera midi encrypted-media"
+              allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media; cross-origin-isolated"
             />
           ) : activeApp === 'doom' ? (
             <iframe 
@@ -644,13 +646,17 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
               src="https://ustymukhman.github.io/webDOOM/public/"
               className="w-full h-full border-none" 
               title="DOOM"
-              allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media"
+              allow="autoplay; fullscreen; microphone; camera; midi; encrypted-media; cross-origin-isolated"
             />
           ) : null}
         </div>
       ) : (
         <>
-          <div className="mt-6 flex-1 overflow-y-auto space-y-1 custom-scrollbar pr-2 select-text cursor-text" onPointerDown={(e) => e.stopPropagation()}>
+          <div 
+            className="mt-6 flex-1 overflow-y-auto space-y-1 custom-scrollbar pr-2 select-text cursor-text" 
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={() => inputRef.current?.focus()}
+          >
             {lines.map((line, i) => (
               <motion.div 
                 key={i}
@@ -667,6 +673,7 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
           <form onSubmit={handleCommand} className="mt-4 flex gap-2 border-t border-white/20 pt-2 shrink-0" onPointerDown={(e) => e.stopPropagation()}>
             <span className="text-neon-pink">{'>'}</span>
             <input 
+              ref={inputRef}
               type="text" 
               value={input}
               onChange={(e) => setInput(e.target.value)}

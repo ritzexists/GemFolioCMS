@@ -18,6 +18,11 @@ export default function SEO({ title, description, canonical }: SEOProps) {
     <Helmet>
       <title>{fullTitle}</title>
       <meta name="description" content={siteDescription} />
+      <meta name="author" content={config.author} />
+      <meta property="og:title" content={fullTitle} />
+      <meta property="og:description" content={siteDescription} />
+      <meta property="og:type" content="article" />
+      <meta property="article:author" content={config.author} />
       {canonical && <link rel="canonical" href={canonical} />}
     </Helmet>
   );

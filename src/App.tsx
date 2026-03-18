@@ -44,7 +44,7 @@ export default function App() {
                   <Route path="/blog" element={<Blog />} />
                   <Route path="/blog/*" element={<Post />} />
                   <Route path="/profile" element={<Profile />} />
-                  {import.meta.env.VITE_DISABLE_ADMIN !== 'true' && (
+                  {(import.meta.env.VITE_DISABLE_ADMIN === 'false' || (!import.meta.env.PROD && import.meta.env.VITE_DISABLE_ADMIN !== 'true')) && (
                     <Route path="/admin" element={<Admin />} />
                   )}
                   <Route path="/p/*" element={<Page />} />

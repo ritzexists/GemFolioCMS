@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Theme = 'nonbinary' | 'demi' | 'pan' | 'transgender' | 'lesbian' | 'hddvd' | 'bluray' | 'brat';
+type Theme = 'nonbinary' | 'demi' | 'pan' | 'transgender' | 'lesbian' | 'hddvd' | 'bluray' | 'brat' | 'frutiger-aero' | 'paper';
 
 interface ThemeContextType {
   theme: Theme;
@@ -58,6 +58,18 @@ const themes: Record<Theme, { primary: string; secondary: string; bg: string; pa
     secondary: '#FFFFFF', // White
     bg: '#000000', // Black
     palette: ['#8ACE00', '#FFFFFF', '#000000', '#8ACE00', '#FFFFFF']
+  },
+  'frutiger-aero': {
+    primary: '#00A8FF', // Glossy Blue
+    secondary: '#7CFC00', // Lush Green
+    bg: '#001F3F', // Deep Ocean Blue
+    palette: ['#00A8FF', '#7CFC00', '#FFFFFF', '#001F3F', '#4DD0E1']
+  },
+  paper: {
+    primary: '#000000',
+    secondary: '#444444',
+    bg: '#FFFFFF',
+    palette: ['#000000', '#222222', '#444444', '#666666', '#FFFFFF']
   }
 };
 
@@ -92,9 +104,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (storedDate === today && storedTheme && themes[storedTheme]) {
       setTheme(storedTheme);
     } else {
-      // Pick a new random theme for the day
+      // Automatic detection for E-readers, Braille readers, or High Contrast modes
+      const isHighContrast = window.matchMedia('(prefers-contrast: more)').matches;
+      const isForcedColors = window.matchMedia('(forced-colors: active)').matches;
+      const isEReader = /Kindle|Kobo|PocketBook|Onyx|reMarkable|Silk/i.test(navigator.userAgent);
+      
+      if (isHighContrast || isForcedColors || isEReader) {
+        setTheme('paper');
+        return;
+      }
+
+      // Pick a new random theme for the day (excluding specific themes)
       const themeKeys = Object.keys(themes) as Theme[];
-      const randomTheme = themeKeys[Math.floor(Math.random() * themeKeys.length)];
+      const excludedFromRandom = ['frutiger-aero', 'paper'];
+      const randomPool = themeKeys.filter(t => !excludedFromRandom.includes(t));
+      const randomTheme = randomPool[Math.floor(Math.random() * randomPool.length)];
       
       setTheme(randomTheme);
       
@@ -116,6 +140,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     colors.palette.forEach((color, index) => {
       root.style.setProperty(`--theme-color-${index + 1}`, color);
     });
+
+    // Set data-theme attribute for CSS targeting
+    document.body.setAttribute('data-theme', theme);
   }, [theme]);
 
   const cycleTheme = () => {

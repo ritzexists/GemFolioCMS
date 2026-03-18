@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, useDragControls } from 'motion/react';
+import { useTheme } from '@/context/ThemeContext';
 
 interface DraggableCardProps {
   children: React.ReactNode;
@@ -27,6 +28,7 @@ export default function DraggableCard({
   const [isGlitching, setIsGlitching] = useState(false);
   const [size, setSize] = useState<{width: string | number, height: string | number}>({ width: initialWidth, height: initialHeight });
   const [isResizing, setIsResizing] = useState(false);
+  const { theme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const dragControls = useDragControls();
   const startPos = useRef({ x: 0, y: 0 });
@@ -132,6 +134,19 @@ export default function DraggableCard({
     window.addEventListener('pointermove', doDrag);
     window.addEventListener('pointerup', stopDrag);
   };
+
+  if (theme === 'paper') {
+    return (
+      <div 
+        ref={containerRef}
+        className={`relative ${className}`}
+        style={{ width: size.width, height: size.height }}
+        onClick={onClick}
+      >
+        {children}
+      </div>
+    );
+  }
 
   return (
     <motion.div

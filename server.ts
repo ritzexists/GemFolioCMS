@@ -3,16 +3,24 @@ import { createServer as createViteServer } from 'vite';
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
-import TurndownService from 'turndown';
 import * as cheerio from 'cheerio';
 import { Feed } from 'feed';
 import { DEFAULT_CONFIG } from './src/constants';
+import { parseContent, turndownService } from './src/utils/contentParser';
 
 const app = express();
 const PORT = 3000;
 
 // Middleware to parse JSON
 app.use(express.json());
+
+// Enable Cross-Origin Isolation for SharedArrayBuffer (required for WebVM/Linux)
+app.use((_req, res, next) => {
+  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+});
 
 // Ensure content directories exist
 const CONTENT_DIR = path.join(process.cwd(), 'content');
@@ -68,22 +76,13 @@ const readContent = (dir: string, baseDir: string = dir) => {
       // Ensure forward slashes for slugs
       slug = slug.replace(/\\/g, '/');
 
-      if (file.endsWith('.md')) {
-        const { data, content: body } = matter(content);
-        results.push({
-          slug,
-          frontmatter: data || {},
-          content: body,
-          path: filePath
-        });
-      } else {
-        results.push({
-          slug,
-          frontmatter: {}, 
-          content: content,
-          path: filePath
-        });
-      }
+      const parsed = parseContent(file, content);
+      results.push({
+        slug,
+        frontmatter: parsed.frontmatter,
+        content: parsed.content,
+        path: filePath
+      });
     }
   });
   
@@ -231,8 +230,14 @@ app.get('/api/posts/:slug(*).json', (req, res) => {
     // 3. slug/index.md
     const possiblePaths = [
       path.join(POSTS_DIR, `${slug}.md`),
+      path.join(POSTS_DIR, `${slug}.adoc`),
+      path.join(POSTS_DIR, `${slug}.rst`),
       path.join(POSTS_DIR, slug, `${path.basename(slug)}.md`),
-      path.join(POSTS_DIR, slug, 'index.md')
+      path.join(POSTS_DIR, slug, `${path.basename(slug)}.adoc`),
+      path.join(POSTS_DIR, slug, `${path.basename(slug)}.rst`),
+      path.join(POSTS_DIR, slug, 'index.md'),
+      path.join(POSTS_DIR, slug, 'index.adoc'),
+      path.join(POSTS_DIR, slug, 'index.rst')
     ];
     
     let filePath = '';
@@ -247,8 +252,8 @@ app.get('/api/posts/:slug(*).json', (req, res) => {
       return res.status(404).json({ error: 'Post not found' });
     }
     const content = fs.readFileSync(filePath, 'utf-8');
-    const { data, content: body } = matter(content);
-    res.json({ slug, frontmatter: data, content: body });
+    const parsed = parseContent(filePath, content);
+    res.json({ slug, frontmatter: parsed.frontmatter, content: parsed.content });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch post' });
   }
@@ -280,8 +285,14 @@ app.get('/api/pages/:slug(*).json', (req, res) => {
     // 3. slug/index.md
     const possiblePaths = [
       path.join(PAGES_DIR, `${slug}.md`),
+      path.join(PAGES_DIR, `${slug}.adoc`),
+      path.join(PAGES_DIR, `${slug}.rst`),
       path.join(PAGES_DIR, slug, `${path.basename(slug)}.md`),
-      path.join(PAGES_DIR, slug, 'index.md')
+      path.join(PAGES_DIR, slug, `${path.basename(slug)}.adoc`),
+      path.join(PAGES_DIR, slug, `${path.basename(slug)}.rst`),
+      path.join(PAGES_DIR, slug, 'index.md'),
+      path.join(PAGES_DIR, slug, 'index.adoc'),
+      path.join(PAGES_DIR, slug, 'index.rst')
     ];
     
     let filePath = '';
@@ -296,8 +307,8 @@ app.get('/api/pages/:slug(*).json', (req, res) => {
       return res.status(404).json({ error: 'Page not found' });
     }
     const content = fs.readFileSync(filePath, 'utf-8');
-    const { data, content: body } = matter(content);
-    res.json({ slug, frontmatter: data, content: body });
+    const parsed = parseContent(filePath, content);
+    res.json({ slug, frontmatter: parsed.frontmatter, content: parsed.content });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch page' });
   }
@@ -322,8 +333,14 @@ app.post('/api/content.json', (req, res) => {
     const findFilePath = (s: string) => {
       const possiblePaths = [
         path.join(dir, `${s}.md`),
+        path.join(dir, `${s}.adoc`),
+        path.join(dir, `${s}.rst`),
         path.join(dir, s, `${path.basename(s)}.md`),
-        path.join(dir, s, 'index.md')
+        path.join(dir, s, `${path.basename(s)}.adoc`),
+        path.join(dir, s, `${path.basename(s)}.rst`),
+        path.join(dir, s, 'index.md'),
+        path.join(dir, s, 'index.adoc'),
+        path.join(dir, s, 'index.rst')
       ];
       return possiblePaths.find(p => fs.existsSync(p));
     };
@@ -375,8 +392,14 @@ app.delete('/api/content/:type/:slug(*).json', async (req, res) => {
     
     const possiblePaths = [
       path.join(dir, `${slug}.md`),
+      path.join(dir, `${slug}.adoc`),
+      path.join(dir, `${slug}.rst`),
       path.join(dir, slug, `${path.basename(slug)}.md`),
-      path.join(dir, slug, 'index.md')
+      path.join(dir, slug, `${path.basename(slug)}.adoc`),
+      path.join(dir, slug, `${path.basename(slug)}.rst`),
+      path.join(dir, slug, 'index.md'),
+      path.join(dir, slug, 'index.adoc'),
+      path.join(dir, slug, 'index.rst')
     ];
     
     const filePath = possiblePaths.find(p => fs.existsSync(p));
@@ -481,42 +504,6 @@ app.post('/api/import.json', async (req, res) => {
       }
     }
     
-    const turndownService = new TurndownService({
-      headingStyle: 'atx',
-      codeBlockStyle: 'fenced',
-      emDelimiter: '*'
-    });
-    
-    // Add rule to keep images
-    turndownService.addRule('images', {
-      filter: 'img',
-      replacement: function (content, node) {
-        const alt = (node as HTMLElement).getAttribute('alt') || '';
-        const src = (node as HTMLElement).getAttribute('src') || '';
-        const title = (node as HTMLElement).getAttribute('title') || '';
-        return src ? `![${alt}](${src}${title ? ` "${title}"` : ''})` : '';
-      }
-    });
-
-    // Add rule for code blocks to ensure language detection if possible
-    turndownService.addRule('codeBlocks', {
-      filter: ['pre'],
-      replacement: function (content, node) {
-        const codeElement = (node as HTMLElement).querySelector('code');
-        let language = '';
-        
-        if (codeElement) {
-          const className = codeElement.getAttribute('class') || '';
-          const match = className.match(/language-(\w+)/);
-          if (match) {
-            language = match[1];
-          }
-        }
-        
-        return '\n\n```' + language + '\n' + (codeElement ? codeElement.textContent : node.textContent) + '\n```\n\n';
-      }
-    });
-
     const markdown = turndownService.turndown(contentHtml);
     
     res.json({ 

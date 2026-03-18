@@ -4,6 +4,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { motion } from 'motion/react';
 import { ExternalLink } from 'lucide-react';
 import DraggableCard from '@/components/DraggableCard';
+import BabylonHubs from '@/components/BabylonHubs';
 
 interface PageData {
   slug: string;
@@ -122,6 +123,10 @@ export default function Page() {
         return null;
     }
   };
+
+  if (slug === 'hubs') {
+    return <BabylonHubs items={page.frontmatter.items || []} />;
+  }
 
   return (
     <div className="max-w-5xl mx-auto">

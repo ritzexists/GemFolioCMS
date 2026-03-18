@@ -2,8 +2,9 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { vscDarkPlus, prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import 'katex/dist/katex.min.css';
+import { useTheme } from '@/context/ThemeContext';
 
 interface MarkdownRendererProps {
   content: string;
@@ -23,6 +24,7 @@ interface MarkdownRendererProps {
  * @param {string} basePath - Base path for relative URLs.
  */
 export default function MarkdownRenderer({ content, basePath }: MarkdownRendererProps) {
+  const { theme } = useTheme();
   /**
    * Transforms relative URLs to absolute URLs based on the basePath.
    * This is crucial for rendering images referenced relatively in markdown files.
@@ -72,10 +74,16 @@ export default function MarkdownRenderer({ content, basePath }: MarkdownRenderer
                 <span>TERMINAL_EXEC</span>
               </div>
               <SyntaxHighlighter
-                style={vscDarkPlus}
+                style={theme === 'paper' ? prism : vscDarkPlus}
                 language={match[1]}
                 PreTag="div"
-                customStyle={{ margin: 0, borderRadius: 0, background: '#09090b', padding: '1.5rem' }}
+                customStyle={{ 
+                  margin: 0, 
+                  borderRadius: 0, 
+                  background: theme === 'paper' ? '#f5f5f5' : '#09090b', 
+                  padding: '1.5rem',
+                  border: theme === 'paper' ? '1px solid black' : 'none'
+                }}
                 {...props}
               >
                 {String(children).replace(/\n$/, '')}
@@ -90,7 +98,7 @@ export default function MarkdownRenderer({ content, basePath }: MarkdownRenderer
         img: ({node, ...props}) => (
           <span className="my-10 block">
             <span className="neobrutal-box p-2 bg-white/5 block">
-              <img {...props} className="w-full h-auto block grayscale hover:grayscale-0 transition-all duration-500" />
+              <img {...props} crossOrigin="anonymous" className="w-full h-auto block grayscale hover:grayscale-0 transition-all duration-500" />
             </span>
             {props.title && <span className="text-center text-xs font-mono text-neon-pink mt-2 uppercase tracking-widest block">// {props.title}</span>}
           </span>

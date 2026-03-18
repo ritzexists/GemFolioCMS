@@ -60,6 +60,7 @@ export default function Admin() {
   useEffect(() => {
     if (contentType === 'settings') {
       setValueSettings('siteName', config.siteName);
+      setValueSettings('author', config.author);
       setValueSettings('footerText', config.footerText);
       setValueSettings('heroTitle', config.heroTitle);
       setValueSettings('heroDescription', config.heroDescription);
@@ -430,6 +431,12 @@ export default function Admin() {
                   <label className="text-sm font-bold text-neon-pink">Site Name</label>
                   <input {...registerSettings('siteName')} className="neobrutal-input w-full" />
                   <p className="text-xs text-white/50">Displayed in the header and browser title.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-neon-pink">Author</label>
+                  <input {...registerSettings('author')} className="neobrutal-input w-full" />
+                  <p className="text-xs text-white/50">Site-wide author for SEO and RSS metadata.</p>
                 </div>
 
                 <div className="space-y-2">

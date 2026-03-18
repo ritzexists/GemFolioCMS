@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 interface PageData {
   slug: string;
@@ -32,6 +32,7 @@ export default function Profile() {
             <img 
               src={profile?.image || "https://picsum.photos/seed/profile/400/400"} 
               alt="Profile" 
+              crossOrigin="anonymous"
               className="w-full h-full object-cover mix-blend-multiply filter grayscale group-hover:grayscale-0 transition-all duration-500"
             />
             <div className="absolute inset-0 bg-neon-green/20 mix-blend-overlay"></div>
@@ -50,8 +51,8 @@ export default function Profile() {
             {page.frontmatter.title}
           </h1>
           
-          <div className="markdown-body prose prose-invert prose-p:font-mono prose-headings:text-neon-pink max-w-none">
-            <ReactMarkdown>{page.content}</ReactMarkdown>
+          <div className="markdown-body prose prose-invert prose-headings:font-black prose-headings:uppercase prose-headings:text-neon-green prose-p:text-white/90 prose-p:leading-relaxed prose-strong:text-neon-pink prose-strong:font-black max-w-none">
+            <MarkdownRenderer content={page.content} basePath="/content/pages/profile/" />
           </div>
         </div>
       </div>

@@ -51,7 +51,7 @@ export default function Home() {
         </div>
 
         {/* Right Column: Terminal */}
-        <div className="h-full">
+        <div className="h-full relative z-40">
           <Terminal onOpenCalculator={() => setIsCalculatorOpen(true)} />
         </div>
       </section>

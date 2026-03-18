@@ -3,6 +3,7 @@ import { DEFAULT_CONFIG } from '../constants';
 
 interface SiteConfig {
   siteName: string;
+  author: string;
   footerText: string;
   heroTitle: string;
   heroDescription: string;

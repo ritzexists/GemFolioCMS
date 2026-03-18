@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Terminal, BookOpen, User, Settings, Home, Star, RectangleGoggles, HardHat, Wrench, Mic, Rss, Menu, X } from 'lucide-react';
+import { Terminal, BookOpen, User, Settings, Home, Star, RectangleGoggles, HardHat, Wrench, Mic, Rss, Menu, X, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSiteConfig } from '@/context/SiteConfigContext';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { config } = useSiteConfig();
+  const { theme, setTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
@@ -16,7 +18,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const logoRef = useRef<HTMLAnchorElement>(null);
   const statusRef = useRef<HTMLDivElement>(null);
 
-  const now = new Date("2026-03-09T15:48:34-07:00");
+  const now = new Date();
   const showBanner = config.bannerMessage && 
                      (!config.bannerStart || now >= new Date(config.bannerStart)) &&
                      (!config.bannerEnd || now <= new Date(config.bannerEnd));
@@ -105,6 +107,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <a href="#main-content" className="skip-to-content">
+        Skip to content
+      </a>
       <header className="border-b-4 border-neon-pink bg-void sticky top-0 z-50">
         {showBanner && (
           <div className="bg-neon-pink text-void text-center py-2 font-bold uppercase text-sm">
@@ -136,7 +141,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <NavItem to="/p/portfolio" icon={WorksIcon} label="Works" />
             <NavItem to="/p/hubs" icon={RectangleGoggles} label="Hubs" />
             <NavItem to="/profile" icon={User} label="Profile" />
-            <NavItem to="/admin" icon={Settings} label="Admin" />
+            {(import.meta.env.VITE_DISABLE_ADMIN === 'false' || (!import.meta.env.PROD && import.meta.env.VITE_DISABLE_ADMIN !== 'true')) && (
+              <NavItem to="/admin" icon={Settings} label="Admin" />
+            )}
           </nav>
 
           {/* Mobile Menu Toggle */}
@@ -164,7 +171,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Mobile Navigation Overlay */}
         {isMenuOpen && isOverflowing && (
-          <div className="fixed inset-0 top-auto bottom-0 h-[calc(100vh-64px)] md:h-[calc(100vh-80px)] bg-void z-40 flex flex-col overflow-y-auto border-t-4 border-neon-pink animate-in slide-in-from-bottom duration-300">
+          <div className="absolute top-full left-0 right-0 h-[calc(100dvh-64px)] md:h-[calc(100dvh-80px)] bg-void z-40 flex flex-col overflow-y-auto border-b-4 border-neon-pink animate-in slide-in-from-top duration-300">
             <div className="flex flex-col">
               <MobileNavItem to="/" icon={Home} label="Home" onClick={() => setIsMenuOpen(false)} />
               <MobileNavItem to="/blog" icon={BookOpen} label="Blog" onClick={() => setIsMenuOpen(false)} />
@@ -173,7 +180,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <MobileNavItem to="/p/portfolio" icon={WorksIcon} label="Works" onClick={() => setIsMenuOpen(false)} />
               <MobileNavItem to="/p/hubs" icon={RectangleGoggles} label="Hubs" onClick={() => setIsMenuOpen(false)} />
               <MobileNavItem to="/profile" icon={User} label="Profile" onClick={() => setIsMenuOpen(false)} />
-              <MobileNavItem to="/admin" icon={Settings} label="Admin" onClick={() => setIsMenuOpen(false)} />
+              {(import.meta.env.VITE_DISABLE_ADMIN === 'false' || (!import.meta.env.PROD && import.meta.env.VITE_DISABLE_ADMIN !== 'true')) && (
+                <MobileNavItem to="/admin" icon={Settings} label="Admin" onClick={() => setIsMenuOpen(false)} />
+              )}
             </div>
             
             <div className="p-8 mt-auto bg-neon-pink/5 border-t-2 border-neon-pink">
@@ -186,11 +195,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         )}
       </header>
 
-      <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
+      <main 
+        id="main-content" 
+        className={cn(
+          "flex-1 w-full",
+          location.pathname === '/p/hubs' ? "flex flex-col" : "p-4 md:p-8 max-w-7xl mx-auto"
+        )}
+      >
         {children}
       </main>
 
-      {!location.pathname.startsWith('/admin') && (
+      {!location.pathname.startsWith('/admin') && location.pathname !== '/p/hubs' && (
         <footer className="border-t-4 border-neon-pink p-6 text-center text-xs uppercase text-white/50">
           <div className="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-4">
             <p>{config.footerText}</p>
@@ -205,6 +220,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Rss size={14} />
               <span>RSS FEED</span>
             </a>
+            <span className="hidden md:inline text-white/20">|</span>
+            <button 
+              onClick={() => setTheme(theme === 'paper' ? 'nonbinary' : 'paper')}
+              className="hover:text-neon-pink transition-colors flex items-center gap-1 uppercase"
+              title={theme === 'paper' ? "Switch to Visual Mode" : "Switch to Simplified Mode"}
+            >
+              {theme === 'paper' ? <EyeOff size={14} /> : <Eye size={14} />}
+              <span>{theme === 'paper' ? "Visual Mode" : "Simplified Mode"}</span>
+            </button>
           </div>
         </footer>
       )}

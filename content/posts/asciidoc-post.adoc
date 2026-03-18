@@ -1,0 +1,14 @@
+---
+title: AsciiDoc Post
+date: 2026-03-10
+description: A test post written in AsciiDoc
+tags: [asciidoc, test]
+---
+= AsciiDoc Post
+
+This is a test post written in *AsciiDoc*.
+
+[source,javascript]
+----
+console.log('Hello AsciiDoc');
+----

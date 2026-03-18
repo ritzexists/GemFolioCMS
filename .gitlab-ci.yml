@@ -1,0 +1,16 @@
+image: node:20
+
+pages:
+  stage: deploy
+  script:
+    - npm install
+    - npm run build
+    - rm -rf public
+    - mv dist public
+  artifacts:
+    paths:
+      - public
+  only:
+    - main
+  variables:
+    VITE_DISABLE_ADMIN: "true"
