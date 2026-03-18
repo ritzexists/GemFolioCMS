@@ -1,0 +1,5 @@
+{
+  "uri": "blog://asciidoc-post",
+  "mimeType": "text/markdown",
+  "text": "# AsciiDoc Post\n\nThis is a test post written in **AsciiDoc**.\n\n```javascript\nconsole.log('Hello AsciiDoc');\n```"
+}

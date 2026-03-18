@@ -1,0 +1,1 @@
+{"slug":"asciidoc-post","frontmatter":{"title":"AsciiDoc Post","date":"2026-03-10T00:00:00.000Z","description":"A test post written in AsciiDoc","tags":["asciidoc","test"]},"content":"# AsciiDoc Post\n\nThis is a test post written in **AsciiDoc**.\n\n```javascript\nconsole.log('Hello AsciiDoc');\n```"}

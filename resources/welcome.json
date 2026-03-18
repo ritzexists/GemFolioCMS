@@ -1,0 +1,5 @@
+{
+  "uri": "blog://welcome",
+  "mimeType": "text/markdown",
+  "text": "\n# Hello World\n\nThis is the start of something **bold**. \n\n## Features\n- Markdown based\n- Brutalist aesthetic\n- Terminal vibes\n\n```javascript\nconsole.log('Hello from the void');\n```\n\n> \"Design is intelligence made visible.\" - Zaha Hadid (probably)\n\n![Placeholder](https://picsum.photos/seed/neon/800/400)\n"
+}

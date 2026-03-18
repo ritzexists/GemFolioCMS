@@ -1,0 +1,99 @@
+{
+  "protocolVersion": "2026-03-18",
+  "serverInfo": {
+    "name": "GemFolioCMS",
+    "version": "1.0.0"
+  },
+  "capabilities": {
+    "resources": [
+      {
+        "uri": "blog://2026/VibingTheCMS",
+        "name": "Vibing the CMS: A Deep Dive",
+        "description": "Exploring the intersection of raw aesthetics and content management.",
+        "mimeType": "text/markdown"
+      },
+      {
+        "uri": "blog://asciidoc-post",
+        "name": "AsciiDoc Post",
+        "description": "A test post written in AsciiDoc",
+        "mimeType": "text/markdown"
+      },
+      {
+        "uri": "blog://rst-post",
+        "name": "RST Post",
+        "description": "A test post written in reStructuredText",
+        "mimeType": "text/markdown"
+      },
+      {
+        "uri": "blog://welcome",
+        "name": "Welcome to the Femme Brutalist Future",
+        "description": "A sample post demonstrating the raw power of this CMS.",
+        "mimeType": "text/markdown"
+      },
+      {
+        "uri": "page://hubs",
+        "name": "VR Portals",
+        "description": "Page: VR Portals",
+        "mimeType": "text/markdown"
+      },
+      {
+        "uri": "page://portfolio",
+        "name": "Digital Works",
+        "description": "Page: Digital Works",
+        "mimeType": "text/markdown"
+      },
+      {
+        "uri": "page://presentations",
+        "name": "Presentations",
+        "description": "Page: Presentations",
+        "mimeType": "text/markdown"
+      },
+      {
+        "uri": "page://profile",
+        "name": "Profile",
+        "description": "Who runs this place?",
+        "mimeType": "text/markdown"
+      },
+      {
+        "uri": "page://recs",
+        "name": "Recommendations",
+        "description": "Page: Recommendations",
+        "mimeType": "text/markdown"
+      }
+    ],
+    "tools": [
+      {
+        "name": "get_post",
+        "description": "Get the content of a specific blog post by slug",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "slug": {
+              "type": "string",
+              "description": "The slug of the post (e.g. 'welcome')"
+            }
+          },
+          "required": [
+            "slug"
+          ]
+        }
+      },
+      {
+        "name": "list_posts",
+        "description": "List all available blog posts",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "description": "Category to list, usually 'all'"
+            }
+          },
+          "required": [
+            "category"
+          ]
+        }
+      }
+    ]
+  }
+}

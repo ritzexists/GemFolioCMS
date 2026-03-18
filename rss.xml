@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app</id>
+    <title>GemFolioCMS</title>
+    <updated>2026-03-18T02:35:04.542Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <author>
+        <name>GemFolio User</name>
+        <uri>https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app</uri>
+    </author>
+    <link rel="alternate" href="https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app"/>
+    <link rel="self" href="https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app/atom.xml"/>
+    <subtitle>A static portfolio generator for the end of the world. Flat-file based, brutalist, and unapologetically loud. Written with Gemini.</subtitle>
+    <icon>https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app/favicon.ico</icon>
+    <rights>All rights reserved 2026</rights>
+    <entry>
+        <title type="html"><![CDATA[Vibing the CMS: A Deep Dive]]></title>
+        <id>https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app/blog/2026/VibingTheCMS</id>
+        <link href="https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app/blog/2026/VibingTheCMS"/>
+        <updated>2026-03-10T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[Exploring the intersection of raw aesthetics and content management.]]></summary>
+        <content type="html"><![CDATA[
+# Vibing the CMS
+
+Content coming soon...
+]]></content>
+        <author>
+            <name>GemFolio User</name>
+            <uri>https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app</uri>
+        </author>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[AsciiDoc Post]]></title>
+        <id>https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app/blog/asciidoc-post</id>
+        <link href="https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app/blog/asciidoc-post"/>
+        <updated>2026-03-10T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[A test post written in AsciiDoc]]></summary>
+        <content type="html"><![CDATA[# AsciiDoc Post
+
+This is a test post written in **AsciiDoc**.
+
+```javascript
+console.log('Hello AsciiDoc');
+```]]></content>
+        <author>
+            <name>GemFolio User</name>
+            <uri>https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app</uri>
+        </author>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[RST Post]]></title>
+        <id>https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app/blog/rst-post</id>
+        <link href="https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app/blog/rst-post"/>
+        <updated>2026-03-10T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[A test post written in reStructuredText]]></summary>
+        <content type="html"><![CDATA[# RST Post
+
+This is a test post written in **reStructuredText**.
+
+```pythonprint
+("Hello RST")
+```]]></content>
+        <author>
+            <name>GemFolio User</name>
+            <uri>https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app</uri>
+        </author>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Welcome to the Femme Brutalist Future]]></title>
+        <id>https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app/blog/welcome</id>
+        <link href="https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app/blog/welcome"/>
+        <updated>2024-05-20T00:00:00.000Z</updated>
+        <summary type="html"><![CDATA[A sample post demonstrating the raw power of this CMS.]]></summary>
+        <content type="html"><![CDATA[
+# Hello World
+
+This is the start of something **bold**. 
+
+## Features
+- Markdown based
+- Brutalist aesthetic
+- Terminal vibes
+
+```javascript
+console.log('Hello from the void');
+```
+
+> "Design is intelligence made visible." - Zaha Hadid (probably)
+
+![Placeholder](https://picsum.photos/seed/neon/800/400)
+]]></content>
+        <author>
+            <name>GemFolio User</name>
+            <uri>https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app</uri>
+        </author>
+    </entry>
+</feed>

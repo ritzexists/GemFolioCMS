@@ -1,0 +1,8 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "[\n  {\n    \"slug\": \"2026/VibingTheCMS\",\n    \"title\": \"Vibing the CMS: A Deep Dive\",\n    \"description\": \"Exploring the intersection of raw aesthetics and content management.\"\n  },\n  {\n    \"slug\": \"asciidoc-post\",\n    \"title\": \"AsciiDoc Post\",\n    \"description\": \"A test post written in AsciiDoc\"\n  },\n  {\n    \"slug\": \"rst-post\",\n    \"title\": \"RST Post\",\n    \"description\": \"A test post written in reStructuredText\"\n  },\n  {\n    \"slug\": \"welcome\",\n    \"title\": \"Welcome to the Femme Brutalist Future\",\n    \"description\": \"A sample post demonstrating the raw power of this CMS.\"\n  }\n]"
+    }
+  ]
+}

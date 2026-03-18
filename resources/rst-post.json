@@ -1,0 +1,5 @@
+{
+  "uri": "blog://rst-post",
+  "mimeType": "text/markdown",
+  "text": "# RST Post\n\nThis is a test post written in **reStructuredText**.\n\n```pythonprint\n(\"Hello RST\")\n```"
+}
