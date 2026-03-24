@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { Save, Plus, Trash, RefreshCw, Eye, Edit, ChevronDown, ChevronRight, Settings } from 'lucide-react';
+import { Save, Plus, Trash, RefreshCw, Eye, Edit, ChevronDown, ChevronRight, Settings, Folder, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import MarkdownRenderer from '@/components/MarkdownRenderer';
 import { useSiteConfig } from '@/context/SiteConfigContext';
 import { logger } from '@/lib/logger';
+import Editor from '@monaco-editor/react';
+import yaml from 'js-yaml';
+import FileManager from '@/components/FileManager';
 
 interface ContentItem {
   slug: string;
@@ -23,19 +26,26 @@ interface ContentItem {
  * - Real-time markdown preview with syntax highlighting
  * - Site-wide configuration settings (title, footer, etc.)
  * - Content import from external URLs
- * - Advanced JSON editor for frontmatter manipulation
+ * - Advanced YAML editor for frontmatter manipulation
+ * - File manager for media and content
  */
 export default function Admin() {
   const [posts, setPosts] = useState<ContentItem[]>([]);
   const [pages, setPages] = useState<ContentItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
-  const [contentType, setContentType] = useState<'post' | 'page' | 'settings'>('post');
+  const [contentType, setContentType] = useState<'post' | 'page' | 'settings' | 'files'>('post');
   const [message, setMessage] = useState("");
   const [isImporting, setIsImporting] = useState(false);
   const [viewMode, setViewMode] = useState<'edit' | 'preview'>('edit');
-  const [isJsonOpen, setIsJsonOpen] = useState(false);
+  const [isYamlOpen, setIsYamlOpen] = useState(false);
   const [selectedForDeletion, setSelectedForDeletion] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
+  const [editorLanguage, setEditorLanguage] = useState("markdown");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [editorInstance, setEditorInstance] = useState<any>(null);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const [mediaButtonText, setMediaButtonText] = useState('MEDIA');
   
   const { config, refreshConfig } = useSiteConfig();
   const { register, handleSubmit, reset, setValue, watch } = useForm();
@@ -45,10 +55,14 @@ export default function Admin() {
    * Fetches all posts and pages from the API.
    * Resets selection state after loading.
    */
-  const loadContent = () => {
+  const loadContent = async () => {
     logger.debug('Loading admin content...');
-    fetch('/api/posts.json').then(res => res.json()).then(setPosts);
-    fetch('/api/pages.json').then(res => res.json()).then(setPages);
+    const [postsData, pagesData] = await Promise.all([
+      fetch('/api/posts.json').then(res => res.json()),
+      fetch('/api/pages.json').then(res => res.json())
+    ]);
+    setPosts(postsData);
+    setPages(pagesData);
     setSelectedForDeletion(new Set());
   };
 
@@ -70,7 +84,7 @@ export default function Admin() {
     }
   }, [config, contentType, setValueSettings]);
 
-  const [jsonText, setJsonText] = useState("");
+  const [yamlText, setYamlText] = useState("");
 
   // When selecting an item, populate form
   useEffect(() => {
@@ -83,35 +97,133 @@ export default function Admin() {
       Object.entries(selectedItem.frontmatter).forEach(([key, val]) => {
         setValue(`frontmatter.${key}`, val);
       });
-      setJsonText(JSON.stringify(selectedItem.frontmatter, null, 2));
+      setYamlText(yaml.dump(selectedItem.frontmatter));
+      
+      // Try to determine language from path extension if available
+      if (selectedItem.path) {
+        if (selectedItem.path.endsWith('.adoc')) setEditorLanguage('asciidoc');
+        else if (selectedItem.path.endsWith('.rst')) setEditorLanguage('restructuredtext');
+        else if (selectedItem.path.endsWith('.json')) setEditorLanguage('json');
+        else if (selectedItem.path.endsWith('.yaml') || selectedItem.path.endsWith('.yml')) setEditorLanguage('yaml');
+        else setEditorLanguage('markdown');
+      } else {
+        setEditorLanguage('markdown');
+      }
     } else {
       reset();
       const initialDate = new Date().toISOString().split('T')[0];
       setValue('frontmatter.date', initialDate);
-      setJsonText(JSON.stringify({ date: initialDate }, null, 2));
+      setYamlText(yaml.dump({ date: initialDate }));
+      setEditorLanguage('markdown');
     }
   }, [selectedItem, setValue, reset, contentType]);
 
-  // Update JSON text when frontmatter changes via other inputs
+  // Update YAML text when frontmatter changes via other inputs
   useEffect(() => {
     const subscription = watch((value, { name, type }) => {
-      // If a specific field changes (e.g. frontmatter.title), update the JSON view
+      // If a specific field changes (e.g. frontmatter.title), update the YAML view
       if (name && name.startsWith('frontmatter.') && name !== 'frontmatter') {
-        const currentFrontmatter =  watch('frontmatter');
-        setJsonText(JSON.stringify(currentFrontmatter, null, 2));
+        const currentFrontmatter = watch('frontmatter');
+        setYamlText(yaml.dump(currentFrontmatter));
       }
     });
     return () => subscription.unsubscribe();
   }, [watch]);
 
-  const handleJsonChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setJsonText(e.target.value);
+  const handleYamlChange = (value: string | undefined) => {
+    const text = value || '';
+    setYamlText(text);
     try {
-      const parsed = JSON.parse(e.target.value);
-      setValue('frontmatter', parsed);
+      const parsed = yaml.load(text);
+      if (typeof parsed === 'object' && parsed !== null) {
+        setValue('frontmatter', parsed);
+      }
     } catch (err) {
-      // Invalid JSON, don't update form yet
+      // Invalid YAML, don't update form yet
     }
+  };
+
+  const handleContentChange = (value: string | undefined) => {
+    setValue('content', value || '');
+  };
+
+  const handleEditorDidMount = (editor: any) => {
+    setEditorInstance(editor);
+  };
+
+  const handleMediaUploadClick = () => {
+    mediaInputRef.current?.click();
+  };
+
+  const handleMediaFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    
+    const slug = watch('slug');
+    if (!slug) {
+      setMessage('Please enter a slug first to upload media');
+      return;
+    }
+
+    const dir = `${contentType}s/${slug}`;
+    
+    const formData = new FormData();
+    formData.append('dir', dir);
+    for (let i = 0; i < e.target.files.length; i++) {
+      formData.append('files', e.target.files[i]);
+    }
+
+    setIsUploadingMedia(true);
+    setMediaButtonText('UPLOADING...');
+    try {
+      const res = await fetch('/api/files/upload', {
+        method: 'POST',
+        body: formData
+      });
+      if (res.ok) {
+        setMediaButtonText('UPLOADED ✓');
+        setTimeout(() => setMediaButtonText('MEDIA'), 3000);
+        
+        // Insert into editor
+        const files = Array.from(e.target.files);
+        let insertText = '';
+        files.forEach(file => {
+          const isImage = file.name.match(/\.(jpg|jpeg|png|gif|svg|webp)$/i);
+          const url = `/content/${dir}/${file.name}`;
+          if (isImage) {
+            insertText += `\n![${file.name}](${url})\n`;
+          } else {
+            insertText += `\n[${file.name}](${url})\n`;
+          }
+        });
+
+        if (editorInstance) {
+          const selection = editorInstance.getSelection();
+          if (selection) {
+            editorInstance.executeEdits('media-upload', [{
+              range: selection,
+              text: insertText,
+              forceMoveMarkers: true
+            }]);
+          } else {
+            const currentVal = editorInstance.getValue();
+            editorInstance.setValue(currentVal + insertText);
+          }
+        } else {
+          // Fallback if editor not mounted
+          const currentVal = watch('content') || '';
+          setValue('content', currentVal + insertText);
+        }
+
+      } else {
+        setMediaButtonText('FAILED ✗');
+        setTimeout(() => setMediaButtonText('MEDIA'), 3000);
+      }
+    } catch (e) {
+      setMediaButtonText('ERROR ✗');
+      setTimeout(() => setMediaButtonText('MEDIA'), 3000);
+    }
+    setIsUploadingMedia(false);
+    if (mediaInputRef.current) mediaInputRef.current.value = '';
   };
 
   /**
@@ -243,13 +355,13 @@ export default function Admin() {
         const today = new Date().toISOString().split('T')[0];
         setValue('frontmatter.date', today);
         
-        // Update JSON view
-        setJsonText(JSON.stringify({ 
+        // Update YAML view
+        setYamlText(yaml.dump({ 
           title: data.title, 
           date: today,
           description: data.description || '',
           tags: data.tags || []
-        }, null, 2));
+        }));
 
         setMessage("IMPORTED SUCCESSFULLY");
         setImportUrl("");
@@ -267,8 +379,11 @@ export default function Admin() {
    */
   const handleDelete = async () => {
     if (selectedForDeletion.size === 0) return;
-    if (!confirm(`Are you sure you want to delete ${selectedForDeletion.size} items?`)) return;
+    setShowDeleteModal(true);
+  };
 
+  const confirmDelete = async () => {
+    setShowDeleteModal(false);
     logger.info(`Deleting ${selectedForDeletion.size} items`);
     try {
       const deletePromises = Array.from(selectedForDeletion).map(slug => 
@@ -306,14 +421,74 @@ export default function Admin() {
 
   const currentContent = watch('content');
 
+  const handleEditFile = async (filePath: string) => {
+    // filePath is like "posts/my-post.md" or "pages/about.md"
+    const isPost = filePath.startsWith('posts/');
+    const isPage = filePath.startsWith('pages/');
+    
+    if (isPost || isPage) {
+      const type = isPost ? 'post' : 'page';
+      let list = isPost ? posts : pages;
+      
+      // Find the item by path
+      let item = list.find(i => i.path && i.path.replace(/\\/g, '/').endsWith(filePath));
+      
+      if (!item) {
+        // Try reloading content
+        const [postsData, pagesData] = await Promise.all([
+          fetch('/api/posts.json').then(res => res.json()),
+          fetch('/api/pages.json').then(res => res.json())
+        ]);
+        setPosts(postsData);
+        setPages(pagesData);
+        list = isPost ? postsData : pagesData;
+        item = list.find((i: any) => i.path && i.path.replace(/\\/g, '/').endsWith(filePath));
+      }
+      
+      if (item) {
+        setContentType(type);
+        setSelectedItem(item);
+      } else {
+        setMessage("Could not load file for editing");
+        setTimeout(() => setMessage(""), 3000);
+      }
+    } else {
+      setMessage("Only posts and pages can be edited here");
+      setTimeout(() => setMessage(""), 3000);
+    }
+  };
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-140px)]">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-140px)] relative">
+      {showDeleteModal && (
+        <div className="absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="neobrutal-box p-6 max-w-md w-full flex flex-col gap-4">
+            <h3 className="text-neon-pink font-bold text-lg">CONFIRM DELETE</h3>
+            <p className="text-white/80">Are you sure you want to delete {selectedForDeletion.size} items?</p>
+            <div className="flex justify-end gap-2 mt-4">
+              <button 
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 border border-white/20 hover:bg-white/10 text-sm font-bold"
+              >
+                CANCEL
+              </button>
+              <button 
+                onClick={confirmDelete}
+                className="neobrutal-button text-sm px-4 py-2"
+              >
+                CONFIRM
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar List */}
       <div className="lg:col-span-3 neobrutal-box p-4 overflow-y-auto h-full flex flex-col">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-neon-pink">CONTENT</h2>
           <div className="flex gap-2">
-            {selectedForDeletion.size > 0 && contentType !== 'settings' && (
+            {selectedForDeletion.size > 0 && contentType !== 'settings' && contentType !== 'files' && (
               <button 
                 onClick={handleDelete}
                 className="bg-red-500 text-white p-1 rounded hover:bg-red-600 transition-colors"
@@ -322,7 +497,7 @@ export default function Admin() {
                 <Trash size={16} />
               </button>
             )}
-            {contentType !== 'settings' && (
+            {contentType !== 'settings' && contentType !== 'files' && (
               <button 
                 onClick={() => { setSelectedItem(null); reset(); }}
                 className="bg-neon-green text-void p-1 rounded hover:bg-white transition-colors"
@@ -335,7 +510,7 @@ export default function Admin() {
         </div>
 
         {/* Search Bar */}
-        {contentType !== 'settings' && (
+        {contentType !== 'settings' && contentType !== 'files' && (
           <div className="mb-4">
             <input 
               type="text" 
@@ -363,8 +538,16 @@ export default function Admin() {
           <button 
             onClick={() => { setContentType('settings'); setSelectedItem(null); }}
             className={cn("flex-1 text-xs font-bold py-1 border border-white/20", contentType === 'settings' && "bg-neon-pink text-void border-neon-pink")}
+            title="Settings"
           >
             <Settings size={14} className="mx-auto" />
+          </button>
+          <button 
+            onClick={() => { setContentType('files'); setSelectedItem(null); }}
+            className={cn("flex-1 text-xs font-bold py-1 border border-white/20", contentType === 'files' && "bg-neon-pink text-void border-neon-pink")}
+            title="File Manager"
+          >
+            <Folder size={14} className="mx-auto" />
           </button>
         </div>
 
@@ -372,6 +555,10 @@ export default function Admin() {
           {contentType === 'settings' ? (
              <div className="text-sm text-white/50 p-2 text-center">
                Global site configuration
+             </div>
+          ) : contentType === 'files' ? (
+             <div className="text-sm text-white/50 p-2 text-center">
+               Manage files and media
              </div>
           ) : (
             (contentType === 'post' ? posts : pages)
@@ -411,7 +598,9 @@ export default function Admin() {
 
       {/* Editor Area */}
       <div className="lg:col-span-9 flex flex-col h-full">
-        {contentType === 'settings' ? (
+        {contentType === 'files' ? (
+          <FileManager onEditFile={handleEditFile} onFileChange={loadContent} />
+        ) : contentType === 'settings' ? (
           <form onSubmit={handleSubmitSettings(onSettingsSubmit)} className="flex flex-col h-full gap-4">
              <div className="neobrutal-box p-4 flex justify-between items-center bg-void z-10 gap-4">
                 <div className="flex items-center gap-4 flex-1">
@@ -488,6 +677,23 @@ export default function Admin() {
               <div className="flex gap-2 items-center">
                 <button 
                   type="button"
+                  onClick={handleMediaUploadClick}
+                  disabled={isUploadingMedia}
+                  className="neobrutal-button text-xs py-1 flex items-center gap-2 whitespace-nowrap"
+                  title="Upload media to this post's folder"
+                >
+                  <Upload size={14} />
+                  {mediaButtonText}
+                </button>
+                <input 
+                  type="file" 
+                  multiple 
+                  className="hidden" 
+                  ref={mediaInputRef} 
+                  onChange={handleMediaFileChange} 
+                />
+                <button 
+                  type="button"
                   onClick={() => setViewMode(viewMode === 'edit' ? 'preview' : 'edit')}
                   className="neobrutal-button text-xs py-1 flex items-center gap-2"
                 >
@@ -547,38 +753,61 @@ export default function Admin() {
               <div className="col-span-2 space-y-1 border-t border-white/10 pt-4 mt-2">
                 <div 
                   className="flex justify-between items-center mb-2 cursor-pointer hover:bg-white/5 p-1 rounded"
-                  onClick={() => setIsJsonOpen(!isJsonOpen)}
+                  onClick={() => setIsYamlOpen(!isYamlOpen)}
                 >
                   <div className="flex items-center gap-2">
-                    {isJsonOpen ? <ChevronDown size={14} className="text-neon-pink" /> : <ChevronRight size={14} className="text-neon-pink" />}
-                    <label className="text-xs text-neon-pink font-bold uppercase cursor-pointer">Advanced Data (JSON)</label>
+                    {isYamlOpen ? <ChevronDown size={14} className="text-neon-pink" /> : <ChevronRight size={14} className="text-neon-pink" />}
+                    <label className="text-xs text-neon-pink font-bold uppercase cursor-pointer">Advanced Data (YAML)</label>
                   </div>
                   <span className="text-[10px] text-white/50">Edit items, profile data, layout settings</span>
                 </div>
                 
-                {isJsonOpen && (
-                  <textarea 
-                    className="neobrutal-input font-mono text-xs h-64"
-                    placeholder='{ "items": [...] }'
-                    value={jsonText}
-                    onChange={handleJsonChange}
-                  />
+                {isYamlOpen && (
+                  <div className="h-64 neobrutal-box p-1">
+                    <Editor
+                      height="100%"
+                      language="yaml"
+                      theme="vs-dark"
+                      value={yamlText}
+                      onChange={handleYamlChange}
+                      options={{
+                        minimap: { enabled: false },
+                        wordWrap: 'on',
+                        folding: true,
+                        snippetSuggestions: 'inline',
+                        tabSize: 2,
+                      }}
+                    />
+                  </div>
                 )}
               </div>
             </div>
 
-            {/* Markdown Editor / Preview */}
+            {/* Content Editor / Preview */}
             <div className="flex-1 neobrutal-box p-0 overflow-hidden flex flex-col min-h-[400px]">
               <div className="bg-neon-pink text-void px-4 py-1 text-xs font-bold uppercase flex justify-between items-center">
-                <span>{viewMode === 'edit' ? 'Markdown Content' : 'Preview'}</span>
+                <span>{viewMode === 'edit' ? 'Content' : 'Preview'}</span>
               </div>
               
               {viewMode === 'edit' ? (
-                <textarea 
-                  {...register('content', { required: true })} 
-                  className="flex-1 w-full bg-void p-4 font-mono text-sm resize-none focus:outline-none text-white/90"
-                  placeholder="# Start writing..."
-                />
+                <div className="flex-1 w-full bg-void p-1 relative">
+                  <input type="hidden" {...register('content', { required: true })} />
+                  <Editor
+                    height="100%"
+                    language={editorLanguage}
+                    theme="vs-dark"
+                    value={currentContent}
+                    onChange={handleContentChange}
+                    onMount={handleEditorDidMount}
+                    options={{
+                      minimap: { enabled: false },
+                      wordWrap: 'on',
+                      folding: true,
+                      snippetSuggestions: 'inline',
+                      tabSize: 2,
+                    }}
+                  />
+                </div>
               ) : (
                 <div className="flex-1 w-full bg-void p-4 overflow-y-auto markdown-body prose prose-invert prose-headings:font-black prose-headings:uppercase prose-headings:text-neon-green prose-p:text-white/90 prose-p:leading-relaxed prose-strong:text-neon-pink prose-strong:font-black max-w-none">
                   <MarkdownRenderer 

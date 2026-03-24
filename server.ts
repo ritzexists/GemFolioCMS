@@ -10,6 +10,7 @@ import { parseContent, turndownService } from './src/utils/contentParser';
 import { WebSocketServer } from 'ws';
 import { Client } from 'ssh2';
 import http from 'http';
+import multer from 'multer';
 
 const app = express();
 const server = http.createServer(app);
@@ -41,6 +42,22 @@ app.use('/content', express.static(CONTENT_DIR));
     fs.mkdirSync(dir, { recursive: true });
   }
 });
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = req.body.dir || '';
+    const targetDir = path.join(CONTENT_DIR, dir.replace(/\.\./g, ''));
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+    cb(null, targetDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  }
+});
+const upload = multer({ storage });
 
 /**
  * Helper function to recursively read content files from a directory.
@@ -144,8 +161,7 @@ app.post('/api/config.json', (req, res) => {
 app.get('/api/posts.json', (req, res) => {
   try {
     const posts = readContent(POSTS_DIR)
-      .filter(p => p.frontmatter && (p.frontmatter as any).title)
-      .map(({ path, ...rest }) => rest);
+      .filter(p => p.frontmatter && (p.frontmatter as any).title);
     // Sort by date desc
     posts.sort((a, b) => {
       const dateA = new Date((a.frontmatter as any).date || 0).getTime();
@@ -269,7 +285,7 @@ app.get('/api/posts/:slug(*).json', (req, res) => {
  */
 app.get('/api/pages.json', (req, res) => {
   try {
-    const pages = readContent(PAGES_DIR).map(({ path, ...rest }) => rest);
+    const pages = readContent(PAGES_DIR);
     res.json(pages);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch pages' });
@@ -360,9 +376,8 @@ app.post('/api/content.json', (req, res) => {
     // Determine where to save
     let filePath = findFilePath(slug);
     if (!filePath) {
-      // If it doesn't exist, default to slug.md at the top level of the dir
-      // unless the slug contains slashes, then we might need to create dirs
-      filePath = path.join(dir, `${slug}.md`);
+      // If it doesn't exist, default to slug/index.md to create a subfolder
+      filePath = path.join(dir, slug, 'index.md');
       const fileDir = path.dirname(filePath);
       if (!fs.existsSync(fileDir)) {
         fs.mkdirSync(fileDir, { recursive: true });
@@ -522,6 +537,148 @@ app.post('/api/import.json', async (req, res) => {
   }
 });
 
+
+// ============================================================================
+// File Manager Routes
+// ============================================================================
+
+app.get('/api/files', (req, res) => {
+  if (process.env.DISABLE_ADMIN === 'true') {
+    return res.status(403).json({ error: 'Admin dashboard is disabled' });
+  }
+
+  try {
+    const dir = (req.query.dir as string) || '';
+    // Prevent directory traversal
+    const safeDir = dir.replace(/\.\./g, '');
+    const targetPath = path.join(CONTENT_DIR, safeDir);
+
+    if (!fs.existsSync(targetPath)) {
+      return res.status(404).json({ error: 'Directory not found' });
+    }
+
+    const items = fs.readdirSync(targetPath, { withFileTypes: true });
+    const files = items.map(item => {
+      const itemPath = path.join(targetPath, item.name);
+      const stat = fs.statSync(itemPath);
+      return {
+        name: item.name,
+        type: item.isDirectory() ? 'directory' : 'file',
+        path: path.join(safeDir, item.name).replace(/\\/g, '/'),
+        size: stat.size,
+        mtime: stat.mtime
+      };
+    });
+
+    // Sort: directories first, then alphabetical
+    files.sort((a, b) => {
+      if (a.type === b.type) return a.name.localeCompare(b.name);
+      return a.type === 'directory' ? -1 : 1;
+    });
+
+    res.json(files);
+  } catch (error) {
+    console.error('Error listing files:', error);
+    res.status(500).json({ error: 'Failed to list files' });
+  }
+});
+
+app.post('/api/files/upload', upload.array('files'), (req, res) => {
+  if (process.env.DISABLE_ADMIN === 'true') {
+    return res.status(403).json({ error: 'Admin dashboard is disabled' });
+  }
+  res.json({ success: true, files: req.files });
+});
+
+app.post('/api/files/move', (req, res) => {
+  if (process.env.DISABLE_ADMIN === 'true') {
+    return res.status(403).json({ error: 'Admin dashboard is disabled' });
+  }
+
+  try {
+    const { source, destination } = req.body;
+    if (!source || !destination) {
+      return res.status(400).json({ error: 'Source and destination required' });
+    }
+
+    const safeSource = source.replace(/\.\./g, '');
+    const safeDest = destination.replace(/\.\./g, '');
+    
+    const sourcePath = path.join(CONTENT_DIR, safeSource);
+    const destPath = path.join(CONTENT_DIR, safeDest);
+
+    if (!fs.existsSync(sourcePath)) {
+      return res.status(404).json({ error: 'Source not found' });
+    }
+
+    // Ensure destination directory exists
+    const destDir = path.dirname(destPath);
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true });
+    }
+
+    fs.renameSync(sourcePath, destPath);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error moving file:', error);
+    res.status(500).json({ error: 'Failed to move file' });
+  }
+});
+
+app.post('/api/files/delete', (req, res) => {
+  if (process.env.DISABLE_ADMIN === 'true') {
+    return res.status(403).json({ error: 'Admin dashboard is disabled' });
+  }
+
+  try {
+    const { path: targetPath } = req.body;
+    if (!targetPath) {
+      return res.status(400).json({ error: 'Path required' });
+    }
+
+    const safePath = targetPath.replace(/\.\./g, '');
+    const fullPath = path.join(CONTENT_DIR, safePath);
+
+    if (!fs.existsSync(fullPath)) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    const stat = fs.statSync(fullPath);
+    if (stat.isDirectory()) {
+      fs.rmSync(fullPath, { recursive: true, force: true });
+    } else {
+      fs.unlinkSync(fullPath);
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    res.status(500).json({ error: 'Failed to delete file' });
+  }
+});
+
+app.post('/api/files/mkdir', (req, res) => {
+  if (process.env.DISABLE_ADMIN === 'true') {
+    return res.status(403).json({ error: 'Admin dashboard is disabled' });
+  }
+
+  try {
+    const { path: targetPath } = req.body;
+    if (!targetPath) {
+      return res.status(400).json({ error: 'Path required' });
+    }
+
+    const safePath = targetPath.replace(/\.\./g, '');
+    const fullPath = path.join(CONTENT_DIR, safePath);
+
+    if (!fs.existsSync(fullPath)) {
+      fs.mkdirSync(fullPath, { recursive: true });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error creating directory:', error);
+    res.status(500).json({ error: 'Failed to create directory' });
+  }
+});
 
 // ============================================================================
 // SSH WebSocket Handler

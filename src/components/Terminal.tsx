@@ -559,6 +559,7 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
       className="neobrutal-box glass-terminal w-full flex flex-col p-4 font-mono text-sm md:text-base relative overflow-hidden transition-colors duration-300 cursor-grab active:cursor-grabbing"
       initialHeight={400}
       onClick={() => inputRef.current?.focus()}
+      disableOnMobile={false}
     >
       <div className="absolute top-0 left-0 right-0 h-6 bg-neon-pink flex items-center px-2 justify-between transition-colors duration-300 z-10 pointer-events-none">
         <span className="text-void font-bold text-xs">

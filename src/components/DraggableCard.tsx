@@ -12,6 +12,7 @@ interface DraggableCardProps {
   onClick?: (e: React.MouseEvent) => void;
   dragConstraints?: React.RefObject<Element>;
   hoverEffect?: 'default' | 'invert' | 'rotate' | 'skew';
+  disableOnMobile?: boolean;
 }
 
 export default function DraggableCard({ 
@@ -23,11 +24,13 @@ export default function DraggableCard({
   minHeight = 150,
   onClick,
   dragConstraints,
-  hoverEffect = 'default'
+  hoverEffect = 'default',
+  disableOnMobile = true
 }: DraggableCardProps) {
   const [isGlitching, setIsGlitching] = useState(false);
   const [size, setSize] = useState<{width: string | number, height: string | number}>({ width: initialWidth, height: initialHeight });
   const [isResizing, setIsResizing] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const { theme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
   const dragControls = useDragControls();
@@ -39,6 +42,13 @@ export default function DraggableCard({
     rotate: 'hover:rotate-3',
     skew: 'hover:skew-x-2 hover:skew-y-2 hover:scale-105'
   };
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const handleNativeDragStart = (e: DragEvent) => {
@@ -63,6 +73,8 @@ export default function DraggableCard({
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    if (disableOnMobile && isMobile) return;
+    
     startPos.current = { x: e.clientX, y: e.clientY };
 
     const target = e.target as HTMLElement;
@@ -107,6 +119,8 @@ export default function DraggableCard({
   };
 
   const startResize = (e: React.PointerEvent) => {
+    if (disableOnMobile && isMobile) return;
+    
     e.preventDefault();
     e.stopPropagation();
     setIsResizing(true);
@@ -148,10 +162,12 @@ export default function DraggableCard({
     );
   }
 
+  const isDraggable = !isResizing && (!disableOnMobile || !isMobile);
+
   return (
     <motion.div
       ref={containerRef}
-      drag={!isResizing}
+      drag={isDraggable}
       dragListener={false}
       dragControls={dragControls}
       dragMomentum={false}
@@ -159,17 +175,19 @@ export default function DraggableCard({
       onDragStart={handleDragStart}
       onPointerDown={handlePointerDown}
       whileDrag={{ scale: 1.02, zIndex: 50, cursor: 'grabbing' }}
-      className={`relative group touch-none ${className} ${isGlitching ? 'glitch-effect' : ''} ${hoverClasses[hoverEffect]}`}
+      className={`relative group ${isDraggable ? 'touch-none' : ''} ${className} ${isGlitching ? 'glitch-effect' : ''} ${hoverClasses[hoverEffect]}`}
       style={{ width: size.width, height: size.height }}
       onClick={handleClick}
     >
        {children}
        
        {/* Resize Handle */}
-       <div 
-         className="resize-handle opacity-0 group-hover:opacity-100 transition-opacity"
-         onPointerDown={startResize}
-       />
+       {(!disableOnMobile || !isMobile) && (
+         <div 
+           className="resize-handle opacity-0 group-hover:opacity-100 transition-opacity"
+           onPointerDown={startResize}
+         />
+       )}
     </motion.div>
   );
 }
