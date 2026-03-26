@@ -255,17 +255,7 @@ async function generate() {
     console.log(`Created static route: ${route.path}`);
   });
 
-  // 7. Generate Cloudflare Pages / SPA Fallbacks
-  console.log('Generating Cloudflare Pages and SPA fallbacks...');
-  // Create _redirects for Cloudflare Pages
-  const redirectsContent = '/* /index.html 200';
-  fs.writeFileSync(path.join(DIST_DIR, '_redirects'), redirectsContent);
-  
-  // Create 404.html as a fallback (standard for many static hosts)
-  fs.copyFileSync(path.join(DIST_DIR, 'index.html'), path.join(DIST_DIR, '404.html'));
-  console.log('Generated _redirects and 404.html');
-
-  // 8. Generate StaticMCP
+  // 7. Generate StaticMCP
   console.log('Generating StaticMCP files...');
   const mcpDir = DIST_DIR;
   const mcpResourcesDir = path.join(mcpDir, 'resources');
