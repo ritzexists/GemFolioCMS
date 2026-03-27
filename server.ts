@@ -33,6 +33,24 @@ const POSTS_DIR = path.join(CONTENT_DIR, 'posts');
 const PAGES_DIR = path.join(CONTENT_DIR, 'pages');
 const CONFIG_FILE = path.join(process.cwd(), 'site-config.json');
 
+// Serve favicon.ico from content/assets if configured
+app.get('/favicon.ico', (req, res) => {
+  let config = DEFAULT_CONFIG;
+  if (fs.existsSync(CONFIG_FILE)) {
+    try {
+      config = { ...DEFAULT_CONFIG, ...JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8')) };
+    } catch (e) {}
+  }
+  if (config.favicon && config.favicon.startsWith('/content/')) {
+    const faviconRelPath = config.favicon.replace(/^\/content\//, '');
+    const faviconPath = path.join(CONTENT_DIR, faviconRelPath);
+    if (fs.existsSync(faviconPath)) {
+      return res.sendFile(faviconPath);
+    }
+  }
+  res.status(404).end();
+});
+
 // Serve content directory as static files
 // This allows referencing local images in markdown via /content/path/to/image
 app.use('/content', express.static(CONTENT_DIR));
@@ -152,6 +170,21 @@ app.post('/api/config.json', (req, res) => {
     console.error('Error saving config:', error);
     res.status(500).json({ error: 'Failed to save config' });
   }
+});
+
+/**
+ * POST /api/settings/icons
+ * Handles uploading site icon and favicon.
+ * Requires admin access.
+ */
+app.post('/api/settings/icons', upload.fields([
+  { name: 'favicon', maxCount: 1 },
+  { name: 'siteIcon', maxCount: 1 }
+]), (req, res) => {
+  if (process.env.DISABLE_ADMIN === 'true') {
+    return res.status(403).json({ error: 'Admin dashboard is disabled' });
+  }
+  res.json({ success: true });
 });
 
 /**

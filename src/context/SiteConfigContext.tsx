@@ -10,6 +10,8 @@ interface SiteConfig {
   bannerMessage?: string;
   bannerStart?: string;
   bannerEnd?: string;
+  favicon?: string;
+  siteIcon?: string;
 }
 
 interface SiteConfigContextType {
@@ -29,7 +31,7 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const fetchConfig = async () => {
     try {
-      const res = await fetch('/api/config.json');
+      const res = await fetch(`${import.meta.env.BASE_URL}api/config.json`);
       if (res.ok) {
         const data = await res.json();
         setConfig(data);

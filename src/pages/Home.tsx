@@ -23,7 +23,7 @@ export default function Home() {
   const { config } = useSiteConfig();
 
   useEffect(() => {
-    fetch('/api/posts.json')
+    fetch(`${import.meta.env.BASE_URL}api/posts.json`)
       .then(res => res.json())
       .then(data => {
         setPosts(data);

@@ -1,12 +1,15 @@
-# Neobrutalism Portfolio & Blog Template
+# GemFolioCMS
 
-A modern, high-performance portfolio and blog template built with React, Vite, and Tailwind CSS. It features a distinct "neobrutalist" aesthetic, a built-in command-line terminal for navigation, and a comprehensive admin dashboard.
+A femme maximalist neobrutalist static-site-generator-style CMS with markdown file backing, admin dashboard, and terminal aesthetics. Built with React, Vite, and Tailwind CSS.
 
 ## Features
 
-- **Neobrutalist Design**: Bold colors, sharp edges, and high contrast.
+- **Neobrutalist Design**: Bold colors, sharp edges, and high contrast with a femme maximalist touch.
 - **Interactive Terminal**: A functional CLI for navigation, searching posts, and fun easter eggs.
 - **Admin Dashboard**: Manage posts, pages, and site configuration directly from the browser.
+- **Subfolder-based Content**: Automatically organizes posts and pages into subfolders (e.g., `/content/posts/slug/index.md`) for better asset management.
+- **Integrated Media Upload**: Upload images and files directly from the editor into the post's dedicated folder.
+- **Enhanced File Manager**: Custom modals for file operations and multi-select support for moving or deleting files.
 - **Markdown Support**: Full markdown rendering with syntax highlighting for code blocks.
 - **Math Support**: Render mathematical formulas using LaTeX syntax (via MathJax/KaTeX).
 - **AsciiDoc & reStructuredText**: Native support for `.adoc` and `.rst` content formats.
@@ -36,8 +39,8 @@ A modern, high-performance portfolio and blog template built with React, Vite, a
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/neobrutalism-template.git
-   cd neobrutalism-template
+   git clone https://github.com/yourusername/gemfolio-cms.git
+   cd gemfolio-cms
    ```
 
 2. Install dependencies:
@@ -98,12 +101,14 @@ If you explicitly want to include the admin panel in your production build, you 
 VITE_DISABLE_ADMIN=false npm run build
 ```
 
-### Local Image Support
-You can store images directly in the `./content` directory and reference them in your Markdown files using relative paths.
+### Local Image & Media Support
+GemFolioCMS uses a subfolder-per-post structure to make media management easy.
 
-1. Place your images in `./content/posts/` or `./content/pages/`.
-2. Reference them in Markdown: `![Alt Text](./my-image.png)`.
-3. The development server and static generator will automatically resolve these paths and include the images in the build.
+1. When you create a new post with slug `my-post`, it lives at `./content/posts/my-post/index.md`.
+2. Use the **MEDIA** button in the Admin Editor to upload files.
+3. Files are saved to the post's subfolder and automatically inserted into your Markdown.
+4. You can also manually place images in the subfolder and reference them: `![Alt Text](./my-image.png)`.
+5. The development server and static generator will automatically resolve these paths.
 
 ## Documentation
 

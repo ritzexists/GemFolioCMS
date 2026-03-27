@@ -24,7 +24,7 @@ export default function Blog() {
   const [localSearch, setLocalSearch] = useState(searchQuery || "");
 
   useEffect(() => {
-    fetch('/api/posts.json')
+    fetch(`${import.meta.env.BASE_URL}api/posts.json`)
       .then(res => res.json())
       .then(data => {
         setPosts(data);

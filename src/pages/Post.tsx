@@ -21,7 +21,7 @@ export default function Post() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/posts/${slug}.json`)
+    fetch(`${import.meta.env.BASE_URL}api/posts/${slug}.json`)
       .then(res => res.json())
       .then(data => {
         setPost(data);
@@ -36,7 +36,7 @@ export default function Post() {
   if (loading) return <div className="text-neon-pink animate-pulse text-center mt-20">DECRYPTING...</div>;
   if (!post) return <div className="text-red-500 text-center mt-20">404: DATA NOT FOUND</div>;
 
-  const postBasePath = slug ? `/content/posts/${slug}/` : '/content/posts/';
+  const postBasePath = slug ? `${import.meta.env.BASE_URL}content/posts/${slug}/` : `${import.meta.env.BASE_URL}content/posts/`;
 
   return (
     <article className="max-w-3xl mx-auto">

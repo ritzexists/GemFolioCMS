@@ -14,7 +14,7 @@ export default function Profile() {
   const [page, setPage] = useState<PageData | null>(null);
 
   useEffect(() => {
-    fetch('/api/pages/profile.json')
+    fetch(`${import.meta.env.BASE_URL}api/pages/profile.json`)
       .then(res => res.json())
       .then(data => setPage(data))
       .catch(err => console.error(err));

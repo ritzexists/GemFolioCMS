@@ -49,7 +49,7 @@ export default function Admin() {
   
   const { config, refreshConfig } = useSiteConfig();
   const { register, handleSubmit, reset, setValue, watch } = useForm();
-  const { register: registerSettings, handleSubmit: handleSubmitSettings, setValue: setValueSettings } = useForm();
+  const { register: registerSettings, handleSubmit: handleSubmitSettings, setValue: setValueSettings, getValues: getValuesSettings } = useForm();
 
   /**
    * Fetches all posts and pages from the API.
@@ -58,8 +58,8 @@ export default function Admin() {
   const loadContent = async () => {
     logger.debug('Loading admin content...');
     const [postsData, pagesData] = await Promise.all([
-      fetch('/api/posts.json').then(res => res.json()),
-      fetch('/api/pages.json').then(res => res.json())
+      fetch(`${import.meta.env.BASE_URL}api/posts.json`).then(res => res.json()),
+      fetch(`${import.meta.env.BASE_URL}api/pages.json`).then(res => res.json())
     ]);
     setPosts(postsData);
     setPages(pagesData);
@@ -81,6 +81,8 @@ export default function Admin() {
       setValueSettings('bannerMessage', config.bannerMessage);
       setValueSettings('bannerStart', config.bannerStart);
       setValueSettings('bannerEnd', config.bannerEnd);
+      setValueSettings('favicon', config.favicon);
+      setValueSettings('siteIcon', config.siteIcon);
     }
   }, [config, contentType, setValueSettings]);
 
@@ -175,7 +177,7 @@ export default function Admin() {
     setIsUploadingMedia(true);
     setMediaButtonText('UPLOADING...');
     try {
-      const res = await fetch('/api/files/upload', {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/files/upload`, {
         method: 'POST',
         body: formData
       });
@@ -253,7 +255,7 @@ export default function Admin() {
         }
       };
 
-      const res = await fetch('/api/content.json', {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/content.json`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -285,7 +287,7 @@ export default function Admin() {
   const onSettingsSubmit = async (data: any) => {
     try {
       logger.info("Saving site settings");
-      const res = await fetch('/api/config.json', {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/config.json`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -301,6 +303,36 @@ export default function Admin() {
     } catch (e) {
       setMessage("ERROR SAVING SETTINGS");
       logger.error("Exception saving settings", e);
+    }
+  };
+
+  const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'favicon' | 'siteIcon') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('dir', 'assets');
+    formData.append(type, file);
+
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/settings/icons`, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (res.ok) {
+        setMessage(`${type.toUpperCase()} UPLOADED`);
+        const newPath = `/content/assets/${file.name}`;
+        setValueSettings(type, newPath);
+        
+        // Save settings immediately to persist the new icon path
+        const currentSettings = getValuesSettings();
+        await onSettingsSubmit({ ...currentSettings, [type]: newPath });
+      } else {
+        setMessage(`ERROR UPLOADING ${type.toUpperCase()}`);
+      }
+    } catch (err) {
+      setMessage(`ERROR UPLOADING ${type.toUpperCase()}`);
     }
   };
 
@@ -320,7 +352,7 @@ export default function Admin() {
     setIsImporting(true);
     logger.info(`Importing content from ${importUrl}`);
     try {
-      const res = await fetch('/api/import.json', {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/import.json`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: importUrl })
@@ -387,7 +419,7 @@ export default function Admin() {
     logger.info(`Deleting ${selectedForDeletion.size} items`);
     try {
       const deletePromises = Array.from(selectedForDeletion).map(slug => 
-        fetch(`/api/content/${contentType}/${slug}.json`, {
+        fetch(`${import.meta.env.BASE_URL}api/content/${contentType}/${slug}.json`, {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' }
         })
@@ -436,8 +468,8 @@ export default function Admin() {
       if (!item) {
         // Try reloading content
         const [postsData, pagesData] = await Promise.all([
-          fetch('/api/posts.json').then(res => res.json()),
-          fetch('/api/pages.json').then(res => res.json())
+          fetch(`${import.meta.env.BASE_URL}api/posts.json`).then(res => res.json()),
+          fetch(`${import.meta.env.BASE_URL}api/pages.json`).then(res => res.json())
         ]);
         setPosts(postsData);
         setPages(pagesData);
@@ -660,6 +692,52 @@ export default function Admin() {
                     <label className="text-sm font-bold text-neon-pink">Banner End</label>
                     <input type="datetime-local" {...registerSettings('bannerEnd')} className="neobrutal-input w-full" />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-white/10">
+                   <div className="space-y-2">
+                     <label className="text-sm font-bold text-neon-pink uppercase tracking-wider">Favicon</label>
+                     <div className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded">
+                       <div className="w-12 h-12 flex items-center justify-center bg-black border border-white/20 overflow-hidden">
+                         {config.favicon ? (
+                           <img src={config.favicon} alt="Favicon" className="max-w-full max-h-full object-contain" />
+                         ) : (
+                           <span className="text-[10px] text-white/30">NONE</span>
+                         )}
+                       </div>
+                       <div className="flex-1 space-y-2">
+                         <input 
+                           type="file" 
+                           accept=".ico,.png,.jpg,.jpeg,.svg" 
+                           onChange={(e) => handleIconUpload(e, 'favicon')}
+                           className="block w-full text-xs text-white/50 file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-neon-pink file:text-void hover:file:bg-white cursor-pointer"
+                         />
+                         <p className="text-[10px] text-white/30">Recommended: 32x32px .ico or .png</p>
+                       </div>
+                     </div>
+                   </div>
+
+                   <div className="space-y-2">
+                     <label className="text-sm font-bold text-neon-pink uppercase tracking-wider">Site Icon / Logo</label>
+                     <div className="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded">
+                       <div className="w-12 h-12 flex items-center justify-center bg-black border border-white/20 overflow-hidden">
+                         {config.siteIcon ? (
+                           <img src={config.siteIcon} alt="Site Icon" className="max-w-full max-h-full object-contain" />
+                         ) : (
+                           <span className="text-[10px] text-white/30">NONE</span>
+                         )}
+                       </div>
+                       <div className="flex-1 space-y-2">
+                         <input 
+                           type="file" 
+                           accept=".png,.jpg,.jpeg,.svg" 
+                           onChange={(e) => handleIconUpload(e, 'siteIcon')}
+                           className="block w-full text-xs text-white/50 file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-neon-pink file:text-void hover:file:bg-white cursor-pointer"
+                         />
+                         <p className="text-[10px] text-white/30">Recommended: 512x512px .png</p>
+                       </div>
+                     </div>
+                   </div>
                 </div>
              </div>
           </form>

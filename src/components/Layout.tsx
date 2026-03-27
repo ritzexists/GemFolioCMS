@@ -211,7 +211,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <p>{config.footerText}</p>
             <span className="hidden md:inline text-white/20">|</span>
             <a 
-              href="/rss.xml" 
+              href={`${import.meta.env.BASE_URL}rss.xml`} 
               target="_blank" 
               rel="noopener noreferrer"
               className="hover:text-neon-pink transition-colors flex items-center gap-1"

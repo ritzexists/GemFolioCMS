@@ -24,7 +24,7 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/pages/${slug}.json`)
+    fetch(`${import.meta.env.BASE_URL}api/pages/${slug}.json`)
       .then(res => res.json())
       .then(data => {
         setPage(data);
@@ -39,7 +39,7 @@ export default function Page() {
   if (loading) return <div className="text-neon-pink animate-pulse text-center mt-20">LOADING SECTOR...</div>;
   if (!page) return <div className="text-red-500 text-center mt-20">404: SECTOR NOT FOUND</div>;
 
-  const pageBasePath = slug ? `/content/pages/${slug}/` : '/content/pages/';
+  const pageBasePath = slug ? `${import.meta.env.BASE_URL}content/pages/${slug}/` : `${import.meta.env.BASE_URL}content/pages/`;
 
   const resolveImagePath = (src: string) => {
     if (!src || src.startsWith('http') || src.startsWith('/')) return src;

@@ -36,7 +36,7 @@ export default function App() {
     <ThemeProvider>
       <SiteConfigProvider>
         <LoadingProvider>
-          <Router>
+          <Router basename={import.meta.env.BASE_URL}>
             <AppContent>
               <Layout>
                 <Routes>

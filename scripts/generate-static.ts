@@ -102,6 +102,16 @@ async function generate() {
   fs.writeFileSync(path.join(apiDir, 'config.json'), JSON.stringify(config));
   console.log('Config generated successfully.');
 
+  // 3.5 Copy Favicon to root for better compatibility
+  if (config.favicon && config.favicon.startsWith('/content/')) {
+    const faviconRelPath = config.favicon.replace(/^\/content\//, '');
+    const faviconSrc = path.join(CONTENT_DIR, faviconRelPath);
+    if (fs.existsSync(faviconSrc)) {
+      console.log(`Copying favicon from ${faviconSrc} to root...`);
+      fs.copyFileSync(faviconSrc, path.join(DIST_DIR, 'favicon.ico'));
+    }
+  }
+
   // 3. Generate Posts
   console.log('Processing blog posts...');
   const allPosts = readContent(POSTS_DIR);
@@ -145,7 +155,7 @@ async function generate() {
 
   // 5. Generate RSS
   console.log('Generating RSS feed...');
-  const siteUrl = 'https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app'; // Fallback
+  const siteUrl = process.env.SITE_URL || 'https://ais-pre-2ub25xtho557ltxwu2ba2q-26762680254.us-east1.run.app'; // Fallback
   const feed = new Feed({
     title: config.siteName || 'Blog Posts',
     description: config.heroDescription || 'Latest posts from our blog',
