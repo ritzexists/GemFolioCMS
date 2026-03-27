@@ -12,6 +12,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
+  const [existingPages, setExistingPages] = useState<string[]>([]);
+  
+  useEffect(() => {
+    fetch(`${import.meta.env.BASE_URL}api/pages.json`)
+      .then(res => res.json())
+      .then(data => setExistingPages(data.map((p: any) => p.slug)))
+      .catch(err => console.error("Failed to fetch pages for menu", err));
+  }, []);
   
   const headerRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
@@ -136,11 +144,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           >
             <NavItem to="/" icon={Home} label="Home" />
             <NavItem to="/blog" icon={BookOpen} label="Blog" />
-            <NavItem to="/p/recs" icon={Star} label="Recs" />
-            <NavItem to="/p/presentations" icon={Mic} label="Talks" />
-            <NavItem to="/p/portfolio" icon={WorksIcon} label="Works" />
-            <NavItem to="/p/hubs" icon={RectangleGoggles} label="Hubs" />
-            <NavItem to="/profile" icon={User} label="Profile" />
+            {existingPages.includes('recs') && <NavItem to="/p/recs" icon={Star} label="Recs" />}
+            {existingPages.includes('presentations') && <NavItem to="/p/presentations" icon={Mic} label="Talks" />}
+            {existingPages.includes('portfolio') && <NavItem to="/p/portfolio" icon={WorksIcon} label="Works" />}
+            {existingPages.includes('hubs') && <NavItem to="/p/hubs" icon={RectangleGoggles} label="Hubs" />}
+            {existingPages.includes('profile') && <NavItem to="/profile" icon={User} label="Profile" />}
             {(import.meta.env.VITE_DISABLE_ADMIN === 'false' || (!import.meta.env.PROD && import.meta.env.VITE_DISABLE_ADMIN !== 'true')) && (
               <NavItem to="/admin" icon={Settings} label="Admin" />
             )}
@@ -175,11 +183,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div className="flex flex-col">
               <MobileNavItem to="/" icon={Home} label="Home" onClick={() => setIsMenuOpen(false)} />
               <MobileNavItem to="/blog" icon={BookOpen} label="Blog" onClick={() => setIsMenuOpen(false)} />
-              <MobileNavItem to="/p/recs" icon={Star} label="Recs" onClick={() => setIsMenuOpen(false)} />
-              <MobileNavItem to="/p/presentations" icon={Mic} label="Talks" onClick={() => setIsMenuOpen(false)} />
-              <MobileNavItem to="/p/portfolio" icon={WorksIcon} label="Works" onClick={() => setIsMenuOpen(false)} />
-              <MobileNavItem to="/p/hubs" icon={RectangleGoggles} label="Hubs" onClick={() => setIsMenuOpen(false)} />
-              <MobileNavItem to="/profile" icon={User} label="Profile" onClick={() => setIsMenuOpen(false)} />
+              {existingPages.includes('recs') && <MobileNavItem to="/p/recs" icon={Star} label="Recs" onClick={() => setIsMenuOpen(false)} />}
+              {existingPages.includes('presentations') && <MobileNavItem to="/p/presentations" icon={Mic} label="Talks" onClick={() => setIsMenuOpen(false)} />}
+              {existingPages.includes('portfolio') && <MobileNavItem to="/p/portfolio" icon={WorksIcon} label="Works" onClick={() => setIsMenuOpen(false)} />}
+              {existingPages.includes('hubs') && <MobileNavItem to="/p/hubs" icon={RectangleGoggles} label="Hubs" onClick={() => setIsMenuOpen(false)} />}
+              {existingPages.includes('profile') && <MobileNavItem to="/profile" icon={User} label="Profile" onClick={() => setIsMenuOpen(false)} />}
               {(import.meta.env.VITE_DISABLE_ADMIN === 'false' || (!import.meta.env.PROD && import.meta.env.VITE_DISABLE_ADMIN !== 'true')) && (
                 <MobileNavItem to="/admin" icon={Settings} label="Admin" onClick={() => setIsMenuOpen(false)} />
               )}
