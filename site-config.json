@@ -4,6 +4,8 @@
   "copyright": "MIT COPYRIGHT 2026",
   "heroTitle": "Soft Shadows are Optional",
   "heroDescription": "A static portfolio generator for the end of the world. Flat-file based, brutalist, and unapologetically loud. Written with Gemini.",
+  "favicon": "/content/assets/favicon.svg",
+  "siteIcon": "/content/assets/site-icon.svg",
   "bannerMessage": "",
   "bannerStart": "",
   "bannerEnd": ""

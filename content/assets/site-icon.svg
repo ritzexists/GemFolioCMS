@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="gemGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffb6c1" />
+      <stop offset="50%" stop-color="#ff69b4" />
+      <stop offset="100%" stop-color="#c71585" />
+    </linearGradient>
+    <linearGradient id="folderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fdf4ff" />
+      <stop offset="100%" stop-color="#e9d5ff" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Sparkles (70s Shojo style) -->
+  <path d="M 100 80 Q 110 120 150 130 Q 110 140 100 180 Q 90 140 50 130 Q 90 120 100 80" fill="#fef08a" />
+  <path d="M 420 150 Q 425 175 450 180 Q 425 185 420 210 Q 415 185 390 180 Q 415 175 420 150" fill="#fef08a" />
+  <path d="M 380 380 Q 385 400 405 405 Q 385 410 380 430 Q 375 410 355 405 Q 375 400 380 380" fill="#fef08a" />
+
+  <!-- Portfolio Back Cover -->
+  <path d="M 120 120 L 440 80 L 460 380 L 140 420 Z" fill="url(#folderGrad)" stroke="#4a044e" stroke-width="8" stroke-linejoin="round" />
+  
+  <!-- Portfolio Pages / Papers -->
+  <path d="M 110 140 L 420 110 L 440 390 L 130 420 Z" fill="#ffffff" stroke="#4a044e" stroke-width="4" stroke-linejoin="round" />
+  <path d="M 100 160 L 400 140 L 420 400 L 120 420 Z" fill="#ffffff" stroke="#4a044e" stroke-width="4" stroke-linejoin="round" />
+
+  <!-- The Gemstone (Radiant Teardrop/Diamond) -->
+  <g transform="translate(256, 260)">
+    <!-- Outer shape -->
+    <polygon points="0,-120 90,-60 120,40 0,140 -120,40 -90,-60" fill="url(#gemGrad)" stroke="#4a044e" stroke-width="8" stroke-linejoin="round" />
+    <!-- Inner facets -->
+    <polygon points="0,-70 50,-30 60,30 0,90 -60,30 -50,-30" fill="#ffb6c1" stroke="#4a044e" stroke-width="6" stroke-linejoin="round" />
+    <polyline points="0,-120 0,-70" stroke="#4a044e" stroke-width="6" />
+    <polyline points="90,-60 50,-30" stroke="#4a044e" stroke-width="6" />
+    <polyline points="120,40 60,30" stroke="#4a044e" stroke-width="6" />
+    <polyline points="0,140 0,90" stroke="#4a044e" stroke-width="6" />
+    <polyline points="-120,40 -60,30" stroke="#4a044e" stroke-width="6" />
+    <polyline points="-90,-60 -50,-30" stroke="#4a044e" stroke-width="6" />
+    <!-- Highlights -->
+    <polygon points="-40,-20 -10,-50 20,-20 -10,10" fill="#ffffff" opacity="0.8" />
+    <polygon points="-80,0 -60,-30 -40,10" fill="#ffffff" opacity="0.6" />
+  </g>
+
+  <!-- Flowing Ribbon (Moto Hagio delicate lines) -->
+  <path d="M 40 300 C 100 200, 150 400, 250 350 C 350 300, 400 450, 480 350" fill="none" stroke="#fbcfe8" stroke-width="16" stroke-linecap="round" />
+  <path d="M 40 300 C 100 200, 150 400, 250 350 C 350 300, 400 450, 480 350" fill="none" stroke="#4a044e" stroke-width="6" stroke-linecap="round" />
+  
+  <!-- Extra delicate wispy lines -->
+  <path d="M 60 320 C 120 240, 160 420, 240 380" fill="none" stroke="#4a044e" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Portfolio Front Cover (Opened) -->
+  <path d="M 80 220 L 360 280 L 320 480 L 40 420 Z" fill="url(#folderGrad)" stroke="#4a044e" stroke-width="8" stroke-linejoin="round" />
+  
+  <!-- Corner Protectors on Portfolio -->
+  <path d="M 80 220 L 120 228 L 112 268 Z" fill="#fbcfe8" stroke="#4a044e" stroke-width="6" stroke-linejoin="round" />
+  <path d="M 360 280 L 320 272 L 328 312 Z" fill="#fbcfe8" stroke="#4a044e" stroke-width="6" stroke-linejoin="round" />
+  
+  <!-- String Tie -->
+  <path d="M 220 250 C 240 280, 200 320, 250 350 C 280 370, 260 400, 240 420" fill="none" stroke="#4a044e" stroke-width="6" stroke-linecap="round" />
+  <circle cx="220" cy="250" r="12" fill="#fbcfe8" stroke="#4a044e" stroke-width="6" />
+
+  <!-- Foreground Sparkle -->
+  <path d="M 280 120 Q 290 160 330 170 Q 290 180 280 220 Q 270 180 230 170 Q 270 160 280 120" fill="#ffffff" stroke="#4a044e" stroke-width="4" />
+</svg>

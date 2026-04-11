@@ -4,8 +4,8 @@ export const DEFAULT_CONFIG = {
   footerText: "Constructed in the void",
   heroTitle: "REALITY\nIS\nOPTIONAL",
   heroDescription: "A static-site generator for the end of the world. Markdown-based, brutalist, and unapologetically loud.",
-  favicon: "/content/assets/favicon.ico",
-  siteIcon: "/content/assets/site-icon.png",
+  favicon: "/content/assets/favicon.svg",
+  siteIcon: "/content/assets/site-icon.svg",
   bannerMessage: "",
   bannerStart: "",
   bannerEnd: ""

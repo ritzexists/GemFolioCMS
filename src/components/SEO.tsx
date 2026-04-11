@@ -24,6 +24,9 @@ export default function SEO({ title, description, canonical }: SEOProps) {
       <meta property="og:type" content="article" />
       <meta property="article:author" content={config.author} />
       {canonical && <link rel="canonical" href={canonical} />}
+      {config.favicon && (
+        <link rel="icon" href={config.favicon.startsWith('http') ? config.favicon : `${import.meta.env.BASE_URL}${config.favicon.replace(/^\//, '')}`} />
+      )}
     </Helmet>
   );
 }

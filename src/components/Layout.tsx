@@ -4,6 +4,7 @@ import { Terminal, BookOpen, User, Settings, Home, Star, RectangleGoggles, HardH
 import { cn } from '@/lib/utils';
 import { useSiteConfig } from '@/context/SiteConfigContext';
 import { useTheme } from '@/context/ThemeContext';
+import SEO from '@/components/SEO';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -115,6 +116,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO />
       <a href="#main-content" className="skip-to-content">
         Skip to content
       </a>
@@ -130,7 +132,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             to="/" 
             className="flex items-center px-4 md:px-6 border-r-4 border-neon-pink bg-neon-green text-void hover:bg-white transition-colors"
           >
-            <Terminal size={24} className="mr-2 shrink-0" />
+            {config.siteIcon ? (
+              <img 
+                src={config.siteIcon.startsWith('http') ? config.siteIcon : `${import.meta.env.BASE_URL}${config.siteIcon.replace(/^\//, '')}`} 
+                alt="Site Icon" 
+                className="w-6 h-6 md:w-8 md:h-8 mr-2 shrink-0 object-contain" 
+              />
+            ) : (
+              <Terminal size={24} className="mr-2 shrink-0" />
+            )}
             <span className="font-black text-lg md:text-xl tracking-tighter uppercase truncate max-w-[150px] md:max-w-none">{config.siteName}</span>
           </Link>
           

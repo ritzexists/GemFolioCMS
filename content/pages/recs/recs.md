@@ -1,0 +1,33 @@
+---
+title: "Recommendations"
+layout: "recs"
+items:
+  - title: "Obsidian"
+    image: "https://picsum.photos/seed/obsidian/600/400"
+    link: "https://obsidian.md"
+    description: "A second brain, for you, forever. The best note-taking app for linking your thinking."
+  - title: "The Pragmatic Programmer"
+    image: "https://picsum.photos/seed/pragmatic/600/400"
+    link: "https://pragprog.com/titles/tpp20/the-pragmatic-programmer-20th-anniversary-edition/"
+    description: "Your journey to mastery. A classic book that every developer should read at least once."
+  - title: "Figma"
+    image: "https://picsum.photos/seed/figma/600/400"
+    link: "https://www.figma.com"
+    description: "The collaborative interface design tool. Essential for modern web design workflows."
+  - title: "Syntax.fm"
+    image: "https://picsum.photos/seed/syntax/600/400"
+    link: "https://syntax.fm"
+    description: "A Tasty Treats Podcast for Web Developers. Wes Bos and Scott Tolinski break down complex topics."
+  - title: "Vercel"
+    image: "https://picsum.photos/seed/vercel/600/400"
+    link: "https://vercel.com"
+    description: "Develop. Preview. Ship. The best platform for frontend frameworks and static sites."
+  - title: "Refactoring UI"
+    image: "https://picsum.photos/seed/refactoring/600/400"
+    link: "https://www.refactoringui.com/"
+    description: "Learn how to design beautiful user interfaces by yourself using specific tactics."
+---
+
+# Curated List
+
+A collection of tools, books, and resources that power my workflow and inspire my thinking.
