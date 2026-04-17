@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -5,11 +6,53 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import 'katex/dist/katex.min.css';
 import { useTheme } from '@/context/ThemeContext';
+import { useSiteConfig } from '@/context/SiteConfigContext';
+import { X, ZoomIn } from 'lucide-react';
 
 interface MarkdownRendererProps {
   content: string;
   basePath?: string;
 }
+
+const ZoomableImage = ({ src, alt, title }: any) => {
+  const [isZoomed, setIsZoomed] = useState(false);
+  const { config } = useSiteConfig();
+  const rawSize = config.maxImageSize || '800px';
+  const maxImageSize = rawSize.match(/^\d+$/) ? `${rawSize}px` : rawSize;
+
+  return (
+    <>
+      <span className="my-10 block flex flex-col items-center">
+        <span 
+          className="neobrutal-box p-2 bg-white/5 block relative overflow-hidden group cursor-pointer"
+          style={{ maxWidth: maxImageSize }}
+          onClick={() => setIsZoomed(true)}
+        >
+          <img src={src} alt={alt} crossOrigin="anonymous" className="w-full h-auto block grayscale hover:grayscale-0 transition-all duration-500" />
+          <div className="absolute inset-0 bg-neon-pink/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <ZoomIn className="text-void w-8 h-8" />
+          </div>
+        </span>
+        {title && <span className="text-center text-xs font-mono text-neon-pink mt-2 uppercase tracking-widest block">// {title}</span>}
+      </span>
+
+      {isZoomed && (
+        <div 
+          className="fixed inset-0 z-[100] bg-void/90 backdrop-blur-sm flex items-center justify-center p-4 cursor-pointer"
+          onClick={() => setIsZoomed(false)}
+        >
+          <button 
+            className="absolute top-6 right-6 text-neon-pink hover:text-white transition-colors"
+            onClick={(e) => { e.stopPropagation(); setIsZoomed(false); }}
+          >
+            <X size={32} />
+          </button>
+          <img src={src} alt={alt} crossOrigin="anonymous" className="max-w-full max-h-[90vh] object-contain shadow-[0_0_30px_rgba(255,42,147,0.3)] border-2 border-neon-pink" />
+        </div>
+      )}
+    </>
+  );
+};
 
 /**
  * MarkdownRenderer component
@@ -25,6 +68,11 @@ interface MarkdownRendererProps {
  */
 export default function MarkdownRenderer({ content, basePath }: MarkdownRendererProps) {
   const { theme } = useTheme();
+  const { config } = useSiteConfig();
+  
+  const rawGap = config.paragraphGap || '1.5rem';
+  const paragraphGap = rawGap.match(/^\d+$/) ? `${rawGap}px` : rawGap;
+
   /**
    * Transforms relative URLs to absolute URLs based on the basePath.
    * This is crucial for rendering images referenced relatively in markdown files.
@@ -56,6 +104,7 @@ export default function MarkdownRenderer({ content, basePath }: MarkdownRenderer
             {...props} 
           />
         ),
+        p: ({node, ...props}) => <p style={{ marginBottom: paragraphGap }} {...props} />,
         ul: ({node, ...props}) => <ul className="space-y-2 my-6 list-none pl-0" {...props} />,
         ol: ({node, ...props}) => <ol className="space-y-2 my-6 list-decimal list-inside marker:text-neon-pink marker:font-bold" {...props} />,
         li: ({node, ...props}) => (
@@ -95,14 +144,7 @@ export default function MarkdownRenderer({ content, basePath }: MarkdownRenderer
             </code>
           );
         },
-        img: ({node, ...props}) => (
-          <span className="my-10 block">
-            <span className="neobrutal-box p-2 bg-white/5 block">
-              <img {...props} crossOrigin="anonymous" className="w-full h-auto block grayscale hover:grayscale-0 transition-all duration-500" />
-            </span>
-            {props.title && <span className="text-center text-xs font-mono text-neon-pink mt-2 uppercase tracking-widest block">// {props.title}</span>}
-          </span>
-        ),
+        img: ({node, ...props}) => <ZoomableImage {...props} />,
         blockquote: ({node, ...props}) => (
           <span className="relative border-l-8 border-neon-pink bg-white/5 p-6 my-10 italic text-xl text-white/90 block" {...props}>
             <span className="absolute -top-4 left-4 text-6xl text-neon-pink/20 font-serif leading-none">"</span>

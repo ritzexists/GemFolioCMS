@@ -491,7 +491,7 @@ export default function Admin() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[calc(100vh-140px)] relative">
+    <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 h-[calc(100vh-140px)] relative">
       {showDeleteModal && (
         <div className="absolute inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
           <div className="neobrutal-box p-6 max-w-md w-full flex flex-col gap-4">
@@ -516,7 +516,7 @@ export default function Admin() {
       )}
 
       {/* Sidebar List */}
-      <div className="lg:col-span-3 neobrutal-box p-4 overflow-y-auto h-full flex flex-col">
+      <div className="lg:col-span-3 neobrutal-box p-4 h-[250px] shrink-0 min-h-[250px] lg:min-h-0 lg:h-full overflow-y-auto flex flex-col">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold text-neon-pink">CONTENT</h2>
           <div className="flex gap-2">
@@ -629,7 +629,7 @@ export default function Admin() {
       </div>
 
       {/* Editor Area */}
-      <div className="lg:col-span-9 flex flex-col h-full">
+      <div className="lg:col-span-9 flex-1 min-h-0 flex flex-col h-full">
         {contentType === 'files' ? (
           <FileManager onEditFile={handleEditFile} onFileChange={loadContent} />
         ) : contentType === 'settings' ? (
@@ -691,6 +691,19 @@ export default function Admin() {
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-neon-pink">Banner End</label>
                     <input type="datetime-local" {...registerSettings('bannerEnd')} className="neobrutal-input w-full" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-neon-pink">Paragraph Gap</label>
+                    <input {...registerSettings('paragraphGap')} className="neobrutal-input w-full" placeholder="e.g. 1.5rem" />
+                    <p className="text-[10px] text-white/50">CSS gap between article paragraphs</p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-neon-pink">Max Image Size</label>
+                    <input {...registerSettings('maxImageSize')} className="neobrutal-input w-full" placeholder="e.g. 800px" />
+                    <p className="text-[10px] text-white/50">Maximum width of images in articles (click to zoom)</p>
                   </div>
                 </div>
 

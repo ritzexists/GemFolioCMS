@@ -8,5 +8,7 @@ export const DEFAULT_CONFIG = {
   siteIcon: "/content/assets/site-icon.svg",
   bannerMessage: "",
   bannerStart: "",
-  bannerEnd: ""
+  bannerEnd: "",
+  paragraphGap: "1.5rem",
+  maxImageSize: "800px"
 };

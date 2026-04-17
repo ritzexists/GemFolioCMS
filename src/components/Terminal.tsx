@@ -100,6 +100,7 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
           "  snake       - Play Snake",
           "  calc        - Open Calculator",
           "  ai          - Ask AI assistant",
+          "  cowsay      - Draw ASCII art (cowsay [cow] [msg])",
           "  unicorn     - ???",
           "  date        - Show system time",
           "  whoami      - Identity check"
@@ -283,6 +284,40 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
         }
         break;
 
+      case 'cowsay':
+        if (!argStr) {
+          newLines.push("Usage: cowsay [cow] [message]");
+          newLines.push("Available cows: " + sprites.map(s => s.name).join(', '));
+        } else {
+          // Check if first arg is a cow name
+          const selectedCow = sprites.find(s => s.name === args[0]);
+          let message = argStr;
+          let cowSprite = sprites[0];
+
+          if (selectedCow) {
+            cowSprite = selectedCow;
+            message = args.slice(1).join(' ') || "Moo.";
+          } else {
+            message = argStr;
+            cowSprite = sprites.find(s => s.name === 'default') || sprites[0];
+          }
+
+          const maxLen = Math.max(message.length, 10);
+          const border = '_'.repeat(maxLen + 2);
+          const bottomBorder = '-'.repeat(maxLen + 2);
+
+          const block = (
+            <div className="flex flex-col items-start my-4" key={`cowsay-${Date.now()}`}>
+              <div> {border}</div>
+              <div className="break-all whitespace-pre-wrap">&lt; {message.padEnd(maxLen)} &gt;</div>
+              <div> {bottomBorder}</div>
+              <div className="whitespace-pre overflow-x-auto max-w-full pb-2">{cowSprite.art}</div>
+            </div>
+          );
+          newLines.push(block);
+        }
+        break;
+
       case 'unicorn':
         newLines.push("UNICORN POWER ACTIVATED!");
         const script = document.createElement('script');
@@ -387,34 +422,231 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
 
   const sprites = [
     {
-      art: `
-        \\   ^__^
+      name: 'default',
+      art: `        \\   ^__^
          \\  (oo)\\_______
             (__)\\       )\\/\\
                 ||----w |
                 ||     ||`
     },
     {
-      art: `
-        \\   (oo)
-         \\  (__)
-            ^  ^`
+      name: 'tux',
+      art: `   \\
+    \\
+        .--.
+       |o_o |
+       |:_/ |
+      //   \\ \\
+     (|     | )
+    /'\\_   _/\`\\
+    \\___)=(___/`
     },
     {
-      art: `
-        \\   /
-         \\  o
-            O`
+      name: 'robot',
+      art: `  \\
+   \\
+
+     [-]
+     (+)=C
+     | |
+     OOO`
     },
     {
-      art: `
-        \\   .--.
-         \\ |o_o |
-           |:_/ |
-          //   \\ \\
-         (|     | )
-        /'\\_   _/\`\\
-        \\___)=(___/`
+      name: 'dragon',
+      art: `      \\                    / \\  //\\
+       \\    |\\___/|      /   \\//  \\\\
+            /o  o  \\__  /    //  | \\ \\    
+           /     /  \\/_/    //   |  \\  \\  
+           @_^_@'/   \\/_   //    |   \\   \\ 
+           //_^_/     \\/_ //     |    \\    \\
+        ( //) |        \\///      |     \\     \\
+      ( / /) _|_ /   )  //       |      \\     _\\
+    ( // /) '/,_ _ _/  ( ; -.    |    _ _\\.-~        .-~~~^-.
+  (( / / )) ,-{        _      \`-.|.-~-.           .~         \`.
+ (( // / ))  '/\\      /                 ~-. _ .-~      .-~^-.  \\
+ (( /// ))      \`.   {            }                   /      \\  \\
+  (( / ))     .----~-.\\        \\-'                 .~         \\  \`. \\^-.
+             ///.----..>        \\             _ -~             \`.  ^-\`  ^-_
+               ///-._ _ _ _ _ _ _}^ - - - - ~                     ~-- ,.-~
+                                                                  /.-~`
+    },
+    {
+      name: 'elephant',
+      art: ` \\     /\\  ___  /\\
+  \\   // \\/   \\/ \\\\
+     ((    o o    ))
+      \\\\ /     \\ //
+       \\/  | |  \\/ 
+        |  | |  |  
+        |  | |  |  
+        |   o   |  
+        | |   | |  
+        |m|   |m|  `
+    },
+    {
+      name: 'ghostbusters',
+      art: `          \\
+           \\
+            \\          __---__
+                    _-       /--______
+               __--( /     \\ )XXXXXXXXXXX\\v.
+             .-XXX(   o   o  )XXXXXXXXXXXXXXX-
+            /XXX(       U     )        XXXXXXX\\
+          /XXXXX(              )--_  XXXXXXXXXXX\\
+         /XXXXX/ (      O     )   XXXXXX   \\XXXXX\\
+         XXXXX/   /            XXXXXX   \\__ \\XXXXX
+         XXXXXX__/          XXXXXX         \\__---->
+ ---___  XXX__/          XXXXXX      \\__         /
+   \\-  --__/   ___/\\  XXXXXX            /  ___--/=
+    \\-\\    ___/    XXXXXX              '--- XXXXXX
+       \\-\\/XXX\\ XXXXXX                      /XXXXX
+         \\XXXXXXXXX   \\                    /XXXXX/
+          \\XXXXXX      >                 _/XXXXX/
+            \\XXXXX--__/              __-- XXXX/
+             -XXXXXXXX---------------  XXXXXX-
+                \\XXXXXXXXXXXXXXXXXXXXXXXXXX/
+                  ""VXXXXXXXXXXXXXXXXXXV""`
+    },
+    {
+      name: 'stegosaurus',
+      art: `\\                             .       .
+ \\                           / \`.   .' " 
+  \\                  .---.  <    > <    >  .---.
+   \\                 |    \\  \\ - ~ ~ - /  /    |
+         _____          ..-~             ~-..-~
+        |     |   \\~~~\\.'                    \`./~~~/
+       ---------   \\__/                        \\__/
+      .'  o    \\     /               /       \\  " 
+     (_____,    \`._.'               |         }  \\/~~~/
+      \`----.          /       }     |        /    \\__/
+            \`-.      |       /      |       /      \`. ,~~|
+                ~-.__|      /_ - ~ ^|      /- _      \`..-‘ / \\  /\\
+                     |     /        |     /     ~-.     \`-/ _ \\/__\\
+                     |_____|        |_____|         ~ - . _ _ _ _ _>`
+    },
+    {
+      name: 'whale',
+      art: `   \\
+    \\
+     \\
+                '-.
+      .---._     \\ \\.--'
+    /       \`-..__)  ,-'
+   |    0           /
+    \\--.__,   .__.,\`
+     \`-.___'._\\_.'`
+    },
+    {
+      name: 'bunny',
+      art: `  \\
+   \\   \\
+        \\ /\\
+        ( )
+      .( o ).`
+    },
+    {
+      name: 'kitty',
+      art: `     \\
+      \\
+       ("\`-'  '-/") .___..--' ' "\`-._
+         \` o_ o  )    \`-.   (      ) .\`-.__. \`)
+         (_Y_.) ' ._   )   \`._\` ;  \`\` -. .-'
+      _.. \`--'_..-_/   /--' _ .' ,4
+   ( i l ),-''  ( l i),'  ( ( ! .-'    `
+    },
+    {
+      name: 'moose',
+      art: `  \\
+   \\   \\_\\_    _/_/
+    \\      \\__/
+           (oo)\\_______
+           (__)\\       )\\/\\
+               ||----- |
+               ||     ||`
+    },
+    {
+      name: 'vader',
+      art: `        \\    ,-^-.
+         \\   !oYo!
+          \\ /./=\\.\\______
+               ##        )\\/\\
+                ||-----w||
+                ||      ||
+
+               Cowth Vader`
+    },
+    {
+      name: 'dalek',
+      art: `   \\
+    \\
+              ___
+      D>=G==='   '.
+            |======|
+            |======|
+        )--/]IIIIII]
+           |_______|
+           C O O O D
+          C O  O  O D
+         C  O  O  O  D
+         C__O__O__O__D
+snd     [_____________]`
+    },
+    {
+      name: 'cheese',
+      art: `   \\
+    \\
+      _____   _________
+     /     \\_/         |
+    |                 ||
+    |                 ||
+   |    ###\\  /###   | |
+   |     o  \\/  o    | |
+  /|                 | |
+ / |        <        |\\ \\
+| /|                 | | |
+| |     \\_______/   |  | |
+| |                 | / /
+/||                 /|||
+   ----------------|
+        | |    | |
+        ***    ***
+       /___\\  /___\\`
+    },
+    {
+      name: 'snoopy',
+      art: ` \\
+  \\          , ----.
+   \\        -  -     \`
+      ,__.,'           \\
+    .'                 *\`
+   /       o   o     / **\\
+  .                 / ****.
+  |    mm           | ****|
+   \\                | ****|
+    \` ._______      \\ ****/
+              \\      /\`---'
+               \\___(
+               /~~~~\\
+              /      \\
+             /      | \\
+            |       |  \\
+  , ~~ .    |, ~~ . |  |\\
+ ( |||| )   ( |||| )(,,,)\`
+( |||||| )-( |||||| )    | ^
+( |||||| ) ( |||||| )    |'/
+( |||||| )-( |||||| )___,'-
+ ( |||| )   ( |||| )
+  \` ~~ '     \` ~~ '`
+    },
+    {
+      name: 'koala',
+      art: `  \\
+   \\
+       ___  
+     {~o_o~}
+      ( Y )
+     ()~*~()   
+     (_)-(_)   `
     }
   ];
 
@@ -537,7 +769,7 @@ export default function Terminal({ onOpenCalculator }: TerminalProps) {
             </div>
             
             <div> {bottomBorder}</div>
-            <div className="whitespace-pre">{randomSprite.art}</div>
+            <div className="whitespace-pre overflow-x-auto max-w-full pb-2">{randomSprite.art}</div>
           </div>
         );
 
